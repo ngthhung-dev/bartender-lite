@@ -956,11 +956,6 @@ var QRCode;
   <!-- MAIN WORKSPACE OPTIMIZED -->
   <div class="flex-1 flex overflow-hidden relative">
     <!-- LEFT SIDEBAR -->
-    <!-- TAB ẨN/HIỆN THANH CÔNG CỤ TRÁI -->
-    <button id="btn-toggle-sidebar" onclick="toggleSidebar()" class="sidebar-edge-tab sidebar-edge-tab-left active" title="Mở / Đóng Thanh Công Cụ Trái">
-      <i id="icon-toggle-sidebar" class="fa-solid fa-chevron-left text-xs"></i>
-    </button>
-
     <aside id="left-sidebar" class="w-64 min-w-[220px] max-w-[280px] bg-white border-r border-slate-200 flex flex-col shrink-0 overflow-y-auto">
       <div class="p-3 border-b border-slate-200">
         <h2 class="text-xs font-bold uppercase text-slate-500 tracking-wider mb-2.5">Thêm phần tử</h2>
@@ -1048,6 +1043,11 @@ var QRCode;
       </div>
     </aside>
 
+    <!-- TAB ẨN/HIỆN THANH CÔNG CỤ TRÁI (đặt sát cạnh phải của menu trái, giáp khung canvas) -->
+    <button id="btn-toggle-sidebar" onclick="toggleSidebar()" class="sidebar-edge-tab sidebar-edge-tab-left active" title="Mở / Đóng Thanh Công Cụ Trái">
+      <i id="icon-toggle-sidebar" class="fa-solid fa-chevron-left text-xs"></i>
+    </button>
+
     <!-- CENTER CANVAS -->
     <main class="flex-1 bg-slate-200 p-4 sm:p-6 overflow-auto flex items-center justify-center relative">
       <div class="absolute bottom-4 right-4 sm:right-6 bg-slate-800/90 text-white backdrop-blur shadow-lg rounded-lg px-2.5 py-1 flex items-center gap-1.5 z-30 text-xs">
@@ -1065,6 +1065,11 @@ var QRCode;
         <div id="design-canvas" class="bg-white canvas-bg relative overflow-hidden shadow-2xl rounded border border-slate-300"></div>
       </div>
     </main>
+
+    <!-- TAB ẨN/HIỆN BẢNG THUỘC TÍNH PHẢI (đặt sát cạnh trái của menu phải, giáp khung canvas) -->
+    <button id="btn-toggle-right-sidebar" onclick="toggleRightSidebar()" class="sidebar-edge-tab sidebar-edge-tab-right active" title="Mở / Đóng Bảng Thuộc Tính Bên Phải">
+      <i id="icon-toggle-right-sidebar" class="fa-solid fa-chevron-right text-xs"></i>
+    </button>
 
     <!-- RIGHT SIDEBAR -->
     <aside id="right-sidebar" class="w-72 min-w-[240px] max-w-[300px] bg-white border-l border-slate-200 flex flex-col shrink-0 overflow-y-auto">
@@ -1228,11 +1233,6 @@ var QRCode;
         </div>
       </div>
     </aside>
-
-    <!-- TAB ẨN/HIỆN BẢNG THUỘC TÍNH PHẢI -->
-    <button id="btn-toggle-right-sidebar" onclick="toggleRightSidebar()" class="sidebar-edge-tab sidebar-edge-tab-right active" title="Mở / Đóng Bảng Thuộc Tính Bên Phải">
-      <i id="icon-toggle-right-sidebar" class="fa-solid fa-chevron-right text-xs"></i>
-    </button>
   </div>
 
   <!-- PRINT CONTAINER -->
