@@ -760,6 +760,42 @@ var QRCode;
       box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35) !important;
     }
 
+    /* TAB ẨN/HIỆN SIDEBAR - GẮN SÁT CẠNH TRÁI/PHẢI KHUNG LÀM VIỆC */
+    .sidebar-edge-tab {
+      align-self: center;
+      width: 18px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #334155;
+      color: #94a3b8;
+      border: none;
+      cursor: pointer;
+      flex-shrink: 0;
+      z-index: 10;
+      transition: all 0.25s ease;
+    }
+
+    .sidebar-edge-tab:hover {
+      background-color: #475569;
+      color: #f8fafc;
+    }
+
+    .sidebar-edge-tab.active {
+      background-color: #2563eb;
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+    }
+
+    .sidebar-edge-tab-left {
+      border-radius: 0 10px 10px 0;
+    }
+
+    .sidebar-edge-tab-right {
+      border-radius: 10px 0 0 10px;
+    }
+
     /* CẤU HÌNH IN CHUẨN */
     @media print {
       @page {
@@ -828,15 +864,8 @@ var QRCode;
       </div>
     </div>
 
-    <!-- Actions Bar -->
-    <div class="flex flex-wrap items-center gap-2">
-      <!-- NÚT TOGGLE SIDEBAR TRÁI -->
-      <button id="btn-toggle-sidebar" onclick="toggleSidebar()" class="sidebar-btn active p-1.5 h-8 w-8 rounded flex items-center justify-center whitespace-nowrap" title="Mở / Đóng Thanh Công Cụ Trái">
-        <i class="fa-solid fa-bars text-sm"></i>
-      </button>
-
-      <div class="hidden sm:block h-5 w-px bg-slate-600"></div>
-
+    <!-- Actions Bar (flex-1 + justify-center để căn giữa toàn bộ cụm nút trong phần không gian còn lại của header, thay vì bị dồn về một phía) -->
+    <div class="flex-1 flex flex-wrap items-center justify-center gap-2">
       <div class="flex items-center gap-1">
         <button id="btn-undo" onclick="undo()" class="bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white disabled:opacity-30 text-xs p-1.5 rounded transition" title="Hoàn tác (Ctrl + Z)" disabled>
           <i class="fa-solid fa-rotate-left"></i>
@@ -876,9 +905,9 @@ var QRCode;
         </button>
       </div>
 
-      <div class="hidden sm:block h-5 w-px bg-slate-600"></div>
+      <div id="divider-before-preview" class="hidden sm:block h-5 w-px bg-slate-600"></div>
 
-      <div class="flex items-center bg-slate-700 rounded px-2 py-1 gap-1.5 text-xs whitespace-nowrap">
+      <div id="preview-nav-container" class="hidden flex items-center bg-slate-700 rounded px-2 py-1 gap-1.5 text-xs whitespace-nowrap">
         <span class="text-slate-300 hidden md:inline">Xem trước:</span>
         <button id="btn-prev-row" class="hover:text-blue-400 text-slate-300 disabled:opacity-30 p-1" disabled>
           <i class="fa-solid fa-chevron-left"></i>
@@ -889,7 +918,7 @@ var QRCode;
         </button>
       </div>
 
-      <div class="hidden sm:block h-5 w-px bg-slate-600"></div>
+      <div id="divider-before-range" class="hidden sm:block h-5 w-px bg-slate-600"></div>
 
       <!-- Ô CHỌN PHẠM VI IN - CHỈ HIỂN THỊ KHI ĐÃ NẠP DỮ LIỆU -->
       <div id="print-range-container" class="hidden flex items-center gap-1.5 bg-slate-700 px-2 py-1 rounded border border-slate-600 text-xs whitespace-nowrap">
@@ -921,18 +950,17 @@ var QRCode;
         <span>Xóa tất cả</span>
       </button>
 
-      <div class="hidden sm:block h-5 w-px bg-slate-600"></div>
-
-      <!-- NÚT TOGGLE THUỘC TÍNH BÊN PHẢI -->
-      <button id="btn-toggle-right-sidebar" onclick="toggleRightSidebar()" class="sidebar-btn active p-1.5 h-8 w-8 rounded flex items-center justify-center whitespace-nowrap" title="Mở / Đóng Bảng Thuộc Tính Bên Phải">
-        <i class="fa-solid fa-sliders text-sm"></i>
-      </button>
     </div>
   </header>
 
   <!-- MAIN WORKSPACE OPTIMIZED -->
   <div class="flex-1 flex overflow-hidden relative">
     <!-- LEFT SIDEBAR -->
+    <!-- TAB ẨN/HIỆN THANH CÔNG CỤ TRÁI -->
+    <button id="btn-toggle-sidebar" onclick="toggleSidebar()" class="sidebar-edge-tab sidebar-edge-tab-left active" title="Mở / Đóng Thanh Công Cụ Trái">
+      <i id="icon-toggle-sidebar" class="fa-solid fa-chevron-left text-xs"></i>
+    </button>
+
     <aside id="left-sidebar" class="w-64 min-w-[220px] max-w-[280px] bg-white border-r border-slate-200 flex flex-col shrink-0 overflow-y-auto">
       <div class="p-3 border-b border-slate-200">
         <h2 class="text-xs font-bold uppercase text-slate-500 tracking-wider mb-2.5">Thêm phần tử</h2>
@@ -1200,6 +1228,11 @@ var QRCode;
         </div>
       </div>
     </aside>
+
+    <!-- TAB ẨN/HIỆN BẢNG THUỘC TÍNH PHẢI -->
+    <button id="btn-toggle-right-sidebar" onclick="toggleRightSidebar()" class="sidebar-edge-tab sidebar-edge-tab-right active" title="Mở / Đóng Bảng Thuộc Tính Bên Phải">
+      <i id="icon-toggle-right-sidebar" class="fa-solid fa-chevron-right text-xs"></i>
+    </button>
   </div>
 
   <!-- PRINT CONTAINER -->
@@ -1405,36 +1438,78 @@ var QRCode;
       });
     }
 
-    // HAM TOGGLE SIDEBAR TRÁI (KÈM TRẠNG THÁI ACTIVE NÚT)
+    // HAM TOGGLE SIDEBAR TRÁI (KÈM TRẠNG THÁI ACTIVE + ĐỔI CHIỀU MŨI TÊN)
     function toggleSidebar() {
       const leftSidebar = document.getElementById('left-sidebar');
       const btn = document.getElementById('btn-toggle-sidebar');
-      leftSidebar.classList.toggle('hidden');
-      btn.classList.toggle('active');
+      const icon = document.getElementById('icon-toggle-sidebar');
+      const isHidden = leftSidebar.classList.toggle('hidden');
+      btn.classList.toggle('active', !isHidden);
+      if (icon) {
+        icon.classList.toggle('fa-chevron-left', !isHidden);
+        icon.classList.toggle('fa-chevron-right', isHidden);
+      }
     }
 
-    // HAM TOGGLE SIDEBAR PHẢI (KÈM TRẠNG THÁI ACTIVE NÚT)
+    // HAM TOGGLE SIDEBAR PHẢI (KÈM TRẠNG THÁI ACTIVE + ĐỔI CHIỀU MŨI TÊN)
     function toggleRightSidebar() {
       const rightSidebar = document.getElementById('right-sidebar');
       const btn = document.getElementById('btn-toggle-right-sidebar');
-      rightSidebar.classList.toggle('hidden');
-      btn.classList.toggle('active');
+      const icon = document.getElementById('icon-toggle-right-sidebar');
+      const isHidden = rightSidebar.classList.toggle('hidden');
+      btn.classList.toggle('active', !isHidden);
+      if (icon) {
+        icon.classList.toggle('fa-chevron-right', !isHidden);
+        icon.classList.toggle('fa-chevron-left', isHidden);
+      }
     }
 
-    // ẨN/HIỆN TOÀN BỘ "PHẠM VI IN" THEO TRẠNG THÁI DỮ LIỆU EXCEL
-    // Không có dữ liệu -> ẩn hoàn toàn.
-    // Có ít nhất 1 dòng dữ liệu -> hiển thị và cho phép sử dụng.
+    // KIỂM TRA: có ít nhất 1 phần tử trong khung thiết kế đã MAP với
+    // 1 cột dữ liệu hợp lệ của file Excel/CSV đã nạp hay chưa.
+    function hasAnyMappedElement() {
+      if (!Array.isArray(elements) || elements.length === 0) return false;
+      if (!Array.isArray(excelColumns) || excelColumns.length === 0) return false;
+      return elements.some(el => el.excelColumn && excelColumns.includes(el.excelColumn));
+    }
+
+    // ẨN/HIỆN "XEM TRƯỚC" VÀ "PHẠM VI IN" THEO TRẠNG THÁI DỮ LIỆU EXCEL
+    // Điều kiện để HIỆN (cả 2 khối):
+    //   1) Đã nạp dữ liệu Excel/CSV (ít nhất 1 dòng)
+    //   2) VÀ có ít nhất 1 phần tử trong khung thiết kế đã mapping với 1 cột dữ liệu
+    // Thiếu 1 trong 2 điều kiện trên -> ẩn hoàn toàn.
     function updatePrintRangeVisibility() {
       const printRangeContainer = document.getElementById('print-range-container');
+      const previewNavContainer = document.getElementById('preview-nav-container');
+      // 2 dấu phân cách "|" bao quanh cụm Xem trước / Phạm vi in trên thanh menu:
+      // phải ẩn/hiện cùng lúc với cụm này, nếu không sẽ bị dư dấu phân cách
+      // khi cụm Xem trước / Phạm vi in đang ẩn.
+      const dividerBeforePreview = document.getElementById('divider-before-preview');
+      const dividerBeforeRange = document.getElementById('divider-before-range');
+
       const hasExcelData = Array.isArray(excelData) && excelData.length > 0;
+      const shouldShow = hasExcelData && hasAnyMappedElement();
+
+      if (previewNavContainer) {
+        previewNavContainer.classList.toggle('hidden', !shouldShow);
+      }
+      // Lưu ý: 2 dấu phân cách này dùng class "hidden sm:block" (ẩn trên mobile,
+      // hiện trên desktop). classList.toggle('hidden', ...) sẽ KHÔNG ẩn được
+      // trên desktop vì "sm:block" ghi đè "hidden" ở breakpoint đó, nên phải
+      // set trực tiếp style.display để đảm bảo ẩn/hiện đúng ở mọi kích thước màn hình.
+      if (dividerBeforePreview) {
+        dividerBeforePreview.style.display = shouldShow ? '' : 'none';
+      }
+      if (dividerBeforeRange) {
+        dividerBeforeRange.style.display = shouldShow ? '' : 'none';
+      }
 
       if (!printRangeContainer) return;
 
-      printRangeContainer.classList.toggle('hidden', !hasExcelData);
+      printRangeContainer.classList.toggle('hidden', !shouldShow);
 
-      // Khi ẩn do chưa có dữ liệu, luôn đưa về "Tất cả"
-      // để tránh giữ lại phạm vi in cũ khi người dùng nạp dữ liệu mới.
-      if (!hasExcelData) {
+      // Khi ẩn do chưa đủ điều kiện, luôn đưa về "Tất cả"
+      // để tránh giữ lại phạm vi in cũ khi người dùng nạp dữ liệu mới / xoá mapping.
+      if (!shouldShow) {
         const rangeSelect = document.getElementById('print-range-select');
         if (rangeSelect) rangeSelect.value = 'all';
         togglePrintRangeInput();
@@ -1526,6 +1601,7 @@ var QRCode;
           });
           elementIdCounter = maxIdNum + 1;
           resetHistory();
+          updatePrintRangeVisibility();
           alert('Tải mẫu thành công!');
         } catch (err) {
           alert('Lỗi mở mẫu: ' + err.message);
@@ -1696,6 +1772,10 @@ var QRCode;
             format: el.barcodeFormat || 'CODE128',
             displayValue: el.showBarcodeText,
             fontSize: desiredFontSize,
+            // JsBarcode dùng "fontOptions" (không phải CSS font-weight) để in đậm/nghiêng
+            // chữ số hiển thị bên dưới mã vạch. Thiếu dòng này khiến nút "Đậm (Bold)"
+            // không có tác dụng với phần tử Mã vạch.
+            fontOptions: el.fontWeight === 'bold' ? 'bold' : '',
             textPosition: "bottom",
             textAlign: el.textAlign || "center",
             textMargin: textMargin,
@@ -1890,6 +1970,7 @@ var QRCode;
 
       renderElementDOM(el, canvas);
       renderColumnBadgesSelection();
+      updatePrintRangeVisibility();
     }
 
     function updateSelectedElementSizePos() {
@@ -2027,6 +2108,7 @@ var QRCode;
       if (domEl) domEl.remove();
       elements = elements.filter(e => e.id !== selectedElementId);
       deselectAll();
+      updatePrintRangeVisibility();
     }
 
     function initDragAndResizeListeners() {
@@ -2227,6 +2309,7 @@ var QRCode;
           } else {
             addElement('field', { excelColumn: col, text: `[${col}]` });
           }
+          updatePrintRangeVisibility();
         });
 
         container.appendChild(colBadge);
@@ -2455,6 +2538,7 @@ var QRCode;
         canvas.innerHTML = '';
         elements = [];
         deselectAll();
+        updatePrintRangeVisibility();
       }
     });
   </script>
