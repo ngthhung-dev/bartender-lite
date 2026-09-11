@@ -763,8 +763,8 @@ var QRCode;
     /* TAB ẨN/HIỆN SIDEBAR - GẮN SÁT CẠNH TRÁI/PHẢI KHUNG LÀM VIỆC */
     .sidebar-edge-tab {
       align-self: center;
-      width: 18px;
-      height: 64px;
+      width: 13.5px;
+      height: 48px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -795,6 +795,42 @@ var QRCode;
     .sidebar-edge-tab-right {
       border-radius: 10px 0 0 10px;
     }
+
+    /* MÀU SẮC RIÊNG CHO TỪNG NÚT "THÊM PHẦN TỬ"
+       (viết CSS thủ công vì bundle Tailwind trong file này được build tĩnh,
+       không có sẵn hết các class màu -> gán thẳng class Tailwind sẽ không hiện màu) */
+    .add-el-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.75rem;
+      line-height: 1rem;
+      gap: 0.25rem;
+      border-width: 1px;
+      border-style: solid;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .add-el-btn-blue { background-color: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+    .add-el-btn-blue:hover { background-color: #dbeafe; border-color: #60a5fa; color: #1e40af; }
+
+    .add-el-btn-emerald { background-color: #ecfdf5; border-color: #a7f3d0; color: #047857; }
+    .add-el-btn-emerald:hover { background-color: #d1fae5; border-color: #34d399; color: #065f46; }
+
+    .add-el-btn-amber { background-color: #fffbeb; border-color: #fde68a; color: #b45309; }
+    .add-el-btn-amber:hover { background-color: #fef3c7; border-color: #fbbf24; color: #92400e; }
+
+    .add-el-btn-indigo { background-color: #eef2ff; border-color: #c7d2fe; color: #4338ca; }
+    .add-el-btn-indigo:hover { background-color: #e0e7ff; border-color: #818cf8; color: #3730a3; }
+
+    .add-el-btn-rose { background-color: #fff1f2; border-color: #fecdd3; color: #be123c; }
+    .add-el-btn-rose:hover { background-color: #ffe4e6; border-color: #fb7185; color: #9f1239; }
+
+    .add-el-btn-violet { background-color: #f5f3ff; border-color: #ddd6fe; color: #6d28d9; }
+    .add-el-btn-violet:hover { background-color: #ede9fe; border-color: #a78bfa; color: #5b21b6; }
 
     /* CẤU HÌNH IN CHUẨN */
     @media print {
@@ -960,27 +996,27 @@ var QRCode;
       <div class="p-3 border-b border-slate-200">
         <h2 class="text-xs font-bold uppercase text-slate-500 tracking-wider mb-2.5">Thêm phần tử</h2>
         <div class="grid grid-cols-2 gap-2">
-          <button onclick="addElement('text')" class="flex flex-col items-center justify-center p-2 bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded text-slate-700 hover:text-blue-600 text-xs gap-1 transition">
+          <button onclick="addElement('text')" class="add-el-btn add-el-btn-blue">
             <i class="fa-solid fa-font text-sm"></i>
             <span>Văn bản</span>
           </button>
-          <button onclick="addElement('field')" class="flex flex-col items-center justify-center p-2 bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded text-slate-700 hover:text-blue-600 text-xs gap-1 transition">
+          <button onclick="addElement('field')" class="add-el-btn add-el-btn-emerald">
             <i class="fa-solid fa-database text-sm"></i>
             <span>Trường Excel</span>
           </button>
-          <button onclick="addElement('barcode')" class="flex flex-col items-center justify-center p-2 bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded text-slate-700 hover:text-blue-600 text-xs gap-1 transition">
+          <button onclick="addElement('barcode')" class="add-el-btn add-el-btn-amber">
             <i class="fa-solid fa-barcode text-sm"></i>
             <span>Mã vạch</span>
           </button>
-          <button onclick="addElement('qrcode')" class="flex flex-col items-center justify-center p-2 bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded text-slate-700 hover:text-blue-600 text-xs gap-1 transition">
+          <button onclick="addElement('qrcode')" class="add-el-btn add-el-btn-indigo">
             <i class="fa-solid fa-qrcode text-sm"></i>
             <span>Mã QR</span>
           </button>
-          <button onclick="addElement('box')" class="flex flex-col items-center justify-center p-2 bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded text-slate-700 hover:text-blue-600 text-xs gap-1 transition">
+          <button onclick="addElement('box')" class="add-el-btn add-el-btn-rose">
             <i class="fa-regular fa-square text-sm"></i>
             <span>Khung hình</span>
           </button>
-          <label class="flex flex-col items-center justify-center p-2 bg-slate-50 hover:bg-violet-50 border border-slate-200 hover:border-violet-300 rounded text-slate-700 hover:text-violet-600 text-xs gap-1 transition cursor-pointer" title="Chèn Logo / Hình ảnh PNG, JPG, SVG">
+          <label class="add-el-btn add-el-btn-violet" title="Chèn Logo / Hình ảnh PNG, JPG, SVG">
             <i class="fa-solid fa-image text-sm"></i>
             <span>Chèn ảnh</span>
             <input type="file" id="image-file-input" accept=".png,.jpg,.jpeg,.svg,image/png,image/jpeg,image/svg+xml" class="hidden">
@@ -1045,7 +1081,7 @@ var QRCode;
 
     <!-- TAB ẨN/HIỆN THANH CÔNG CỤ TRÁI (đặt sát cạnh phải của menu trái, giáp khung canvas) -->
     <button id="btn-toggle-sidebar" onclick="toggleSidebar()" class="sidebar-edge-tab sidebar-edge-tab-left active" title="Mở / Đóng Thanh Công Cụ Trái">
-      <i id="icon-toggle-sidebar" class="fa-solid fa-chevron-left text-xs"></i>
+      <i id="icon-toggle-sidebar" class="fa-solid fa-chevron-left text-[9px]"></i>
     </button>
 
     <!-- CENTER CANVAS -->
@@ -1068,7 +1104,7 @@ var QRCode;
 
     <!-- TAB ẨN/HIỆN BẢNG THUỘC TÍNH PHẢI (đặt sát cạnh trái của menu phải, giáp khung canvas) -->
     <button id="btn-toggle-right-sidebar" onclick="toggleRightSidebar()" class="sidebar-edge-tab sidebar-edge-tab-right active" title="Mở / Đóng Bảng Thuộc Tính Bên Phải">
-      <i id="icon-toggle-right-sidebar" class="fa-solid fa-chevron-right text-xs"></i>
+      <i id="icon-toggle-right-sidebar" class="fa-solid fa-chevron-right text-[9px]"></i>
     </button>
 
     <!-- RIGHT SIDEBAR -->
@@ -1431,6 +1467,7 @@ var QRCode;
             case 'ArrowUp': el.top = Math.max(0, el.top - step); break;
             case 'ArrowDown': el.top = el.top + step; break;
           }
+          clampElementToCanvas(el);
           renderElementDOM(el, canvas);
           updatePropertiesPanel(el);
           commitHistoryEdit();
@@ -1982,6 +2019,7 @@ var QRCode;
       el.height = Math.max(2, parseInt(document.getElementById('prop-height').value) || 10);
       el.left = Math.max(0, parseInt(document.getElementById('prop-left').value) || 0);
       el.top = Math.max(0, parseInt(document.getElementById('prop-top').value) || 0);
+      clampElementToCanvas(el);
 
       renderElementDOM(el, canvas);
     }
@@ -1991,6 +2029,23 @@ var QRCode;
       if (!Number.isFinite(n)) n = 0;
       n = ((n % 360) + 360) % 360;
       return Math.round(n * 100) / 100;
+    }
+
+    // GIỚI HẠN PHẦN TỬ LUÔN NẰM TRỌN TRONG VÙNG THIẾT KẾ (canvas)
+    // Được gọi sau mọi thao tác có thể làm thay đổi left/top/width/height
+    // (kéo di chuyển, kéo co giãn, phím mũi tên, nhập tay trong bảng thuộc tính...)
+    function clampElementToCanvas(el) {
+      const canvasW = canvas.clientWidth;
+      const canvasH = canvas.clientHeight;
+      if (!canvasW || !canvasH) return;
+
+      // Không cho phần tử to hơn cả vùng thiết kế
+      el.width = Math.min(el.width, canvasW);
+      el.height = Math.min(el.height, canvasH);
+
+      // Giữ phần tử nằm trọn trong khoảng [0, canvasW] và [0, canvasH]
+      el.left = Math.min(Math.max(0, el.left), Math.max(0, canvasW - el.width));
+      el.top = Math.min(Math.max(0, el.top), Math.max(0, canvasH - el.height));
     }
 
     function setRotationFromProperty() {
@@ -2132,25 +2187,46 @@ var QRCode;
         } else if (isDragging) {
           el.left = Math.max(0, initialLeft + dx);
           el.top = Math.max(0, initialTop + dy);
+          clampElementToCanvas(el);
           renderElementDOM(el, canvas);
           updatePropertiesPanel(el);
         } else if (isResizing && resizeHandleType) {
+          const canvasW = canvas.clientWidth;
+          const canvasH = canvas.clientHeight;
           let newWidth = initialWidth, newHeight = initialHeight;
           let newLeft = initialLeft, newTop = initialTop;
 
-          if (resizeHandleType.includes('e')) newWidth = Math.max(15, initialWidth + dx);
-          if (resizeHandleType.includes('s')) newHeight = Math.max(5, initialHeight + dy);
-          if (resizeHandleType.includes('w')) {
-            const possibleW = initialWidth - dx;
-            if (possibleW > 15) { newWidth = possibleW; newLeft = initialLeft + dx; }
+          // Cạnh phải (kéo rộng ra/thu vào bên phải) - mép trái cố định,
+          // không cho vượt quá rìa phải của vùng thiết kế.
+          if (resizeHandleType.includes('e')) {
+            const maxW = Math.max(15, canvasW - initialLeft);
+            newWidth = Math.min(Math.max(15, initialWidth + dx), maxW);
           }
+          // Cạnh dưới - mép trên cố định, không vượt quá rìa dưới.
+          if (resizeHandleType.includes('s')) {
+            const maxH = Math.max(5, canvasH - initialTop);
+            newHeight = Math.min(Math.max(5, initialHeight + dy), maxH);
+          }
+          // Cạnh trái - mép phải (initialLeft + initialWidth) giữ cố định,
+          // không cho mép trái mới lùi ra ngoài rìa trái (< 0).
+          if (resizeHandleType.includes('w')) {
+            const rightEdge = initialLeft + initialWidth;
+            const possibleLeft = Math.min(Math.max(0, initialLeft + dx), rightEdge - 15);
+            newLeft = possibleLeft;
+            newWidth = rightEdge - possibleLeft;
+          }
+          // Cạnh trên - mép dưới (initialTop + initialHeight) giữ cố định,
+          // không cho mép trên mới lùi ra ngoài rìa trên (< 0).
           if (resizeHandleType.includes('n')) {
-            const possibleH = initialHeight - dy;
-            if (possibleH > 5) { newHeight = possibleH; newTop = initialTop + dy; }
+            const bottomEdge = initialTop + initialHeight;
+            const possibleTop = Math.min(Math.max(0, initialTop + dy), bottomEdge - 5);
+            newTop = possibleTop;
+            newHeight = bottomEdge - possibleTop;
           }
 
           el.width = newWidth; el.height = newHeight;
           el.left = newLeft; el.top = newTop;
+          clampElementToCanvas(el);
           renderElementDOM(el, canvas);
           updatePropertiesPanel(el);
         }
