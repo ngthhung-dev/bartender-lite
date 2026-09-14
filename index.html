@@ -882,7 +882,17 @@ var QRCode;
         overflow: hidden !important;
       }
 
-      body * { visibility: hidden !important; }
+      /* QUAN TRỌNG: dùng display:none (thay vì chỉ visibility:hidden) cho toàn bộ
+         phần giao diện app (header, khung làm việc...) khi in. Nếu chỉ ẩn bằng
+         visibility:hidden, các phần tử đó vẫn CHIẾM CHỖ trong luồng bố cục trang
+         in (visibility:hidden không gỡ layout như display:none), khiến trình in/
+         xuất PDF phải tự động chia thêm rất nhiều trang trắng để "chứa" hết phần
+         nội dung ẩn nhưng vẫn còn chiếm không gian đó. Đây chính là nguyên nhân
+         gây ra hiện tượng in ra rất nhiều tem/trang trắng thừa.
+         Chỉ có đúng 3 phần tử con trực tiếp của <body>: header, khung làm việc
+         chính (.flex-1.flex...), và #print-area -> ẩn hẳn 2 cái đầu, chỉ giữ
+         lại #print-area khi in. */
+      body > *:not(#print-area) { display: none !important; }
 
       #print-area, #print-area * { visibility: visible !important; }
 
@@ -2644,7 +2654,11 @@ var QRCode;
       document.documentElement.style.setProperty('--print-paper-width', `${totalPaperWMm}mm`);
       document.documentElement.style.setProperty('--print-paper-height', `${totalPaperHMm}mm`);
 
-      const totalRecords = excelData.length > 0 ? excelData.length : 1;
+      // Chỉ in theo số dòng dữ liệu Excel khi THỰC SỰ có ít nhất 1 phần tử đang
+      // mapping với 1 cột dữ liệu. Nếu đã nạp Excel nhưng không còn phần tử nào
+      // dùng dữ liệu đó nữa (đã "ngắt kết nối" mapping), in tem chỉ nên ra 1 tem
+      // (nhân với Số bản in), không lặp lại theo số dòng Excel cũ.
+      const totalRecords = (excelData.length > 0 && hasAnyMappedElement()) ? excelData.length : 1;
       const rangeType = document.getElementById('print-range-select').value;
       
       let startRow = 0;
