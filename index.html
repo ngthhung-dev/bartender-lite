@@ -726,6 +726,42 @@ var QRCode;
     .handle-sw { bottom: -5px; left: -5px; cursor: nesw-resize; }
     .handle-w  { top: calc(50% - 5px); left: -5px; cursor: ew-resize; }
 
+    /* Điểm xoay (Rotate Handle) - chấm tròn xanh phía trên phần tử.
+       Trước đây thiếu hẳn CSS định vị/hiển thị nên chấm này tồn tại trong DOM
+       nhưng vô hình và không nằm đúng vị trí, khiến không thể kéo để xoay được. */
+    .rotate-handle {
+      display: none;
+      position: absolute;
+      top: -22px;
+      left: calc(50% - 5px);
+      width: 10px;
+      height: 10px;
+      background-color: #2563eb;
+      border: 1px solid #ffffff;
+      border-radius: 50%;
+      cursor: grab;
+      z-index: 10;
+    }
+
+    .rotate-handle:active {
+      cursor: grabbing;
+    }
+
+    .design-element.selected .rotate-handle {
+      display: block;
+    }
+
+    /* Đường kẻ nối chấm xoay với mép trên của phần tử, cho dễ nhận biết */
+    .design-element.selected .rotate-handle::after {
+      content: '';
+      position: absolute;
+      top: 9px;
+      left: calc(50% - 0.5px);
+      width: 1px;
+      height: 13px;
+      background-color: #2563eb;
+    }
+
     /* Custom Scrollbar */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #f1f5f9; }
@@ -1265,6 +1301,10 @@ var QRCode;
                   </select>
                 </div>
               </div>
+              <div id="prop-max-lines-wrapper">
+                <label class="text-[11px] text-slate-500">Số dòng tối đa</label>
+                <input type="number" id="prop-max-lines" value="1" min="1" max="10" oninput="updateSelectedElement()" class="w-full border border-slate-300 rounded px-2 py-1">
+              </div>
               <div>
                 <label class="block text-[11px] text-slate-500 mb-1">Căn lề nội dung</label>
                 <div class="flex gap-1">
@@ -1293,8 +1333,8 @@ var QRCode;
                 <label for="prop-barcode-text" class="text-xs text-slate-700">Hiển thị chữ bên dưới</label>
               </div>
               <div>
-                <label class="block text-[11px] text-slate-500 mb-0.5">Khoảng cách chữ (px)</label>
-                <input type="number" id="prop-text-margin" value="2" min="0" oninput="updateSelectedElement()" class="w-full border border-slate-300 rounded px-2 py-1">
+                <label class="block text-[11px] text-slate-500 mb-0.5">Khoảng cách giữa chữ và mã vạch</label>
+                <input type="number" id="prop-text-margin" value="0" min="0" oninput="updateSelectedElement()" class="w-full border border-slate-300 rounded px-2 py-1">
               </div>
             </div>
           </div>
@@ -1308,8 +1348,8 @@ var QRCode;
                 <label for="prop-qrcode-text" class="text-xs text-slate-700">Hiển thị chữ bên dưới</label>
               </div>
               <div>
-                <label class="block text-[11px] text-slate-500 mb-0.5">Khoảng cách chữ (px)</label>
-                <input type="number" id="prop-qr-text-margin" value="2" min="0" oninput="updateSelectedElement()" class="w-full border border-slate-300 rounded px-2 py-1">
+                <label class="block text-[11px] text-slate-500 mb-0.5">Khoảng cách giữa chữ và mã QR</label>
+                <input type="number" id="prop-qr-text-margin" value="0" min="0" oninput="updateSelectedElement()" class="w-full border border-slate-300 rounded px-2 py-1">
               </div>
             </div>
           </div>
@@ -1528,7 +1568,15 @@ var QRCode;
           if (e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); return; }
           if (e.key.toLowerCase() === 'y') { e.preventDefault(); redo(); return; }
           if (e.key.toLowerCase() === 'c' && selectedElementId) {
-            e.preventDefault(); copySelectedElement(); return;
+            // CHỈ chặn Ctrl+C để nhân bản phần tử khi người dùng KHÔNG đang bôi đen
+            // (highlight) một đoạn văn bản nào khác trên trang. Nếu không kiểm tra điều
+            // này, việc có 1 phần tử đang được chọn trên canvas (dù người dùng đã click
+            // ra chỗ khác) sẽ khiến Ctrl+C luôn bị "cướp" để copy JSON của phần tử đó,
+            // ghi đè lên nội dung văn bản mà người dùng thực sự muốn copy.
+            const hasTextSelection = (window.getSelection() && window.getSelection().toString().length > 0);
+            if (!hasTextSelection) {
+              e.preventDefault(); copySelectedElement(); return;
+            }
           }
           if (e.key.toLowerCase() === 'v') {
             e.preventDefault(); pasteCopiedElement(); return;
@@ -1757,10 +1805,11 @@ var QRCode;
         fontSize: customProps.fontSize || (type === 'barcode' ? 14 : 12),
         fontWeight: customProps.fontWeight || 'normal',
         textAlign: customProps.textAlign || (type === 'barcode' || type === 'qrcode' ? 'center' : 'left'),
-        textMargin: customProps.textMargin !== undefined ? customProps.textMargin : 2,
+        textMargin: customProps.textMargin !== undefined ? customProps.textMargin : 0,
         barcodeFormat: customProps.barcodeFormat || 'CODE128',
         showBarcodeText: customProps.showBarcodeText !== undefined ? customProps.showBarcodeText : true,
-        showQrText: customProps.showQrText !== undefined ? customProps.showQrText : false
+        showQrText: customProps.showQrText !== undefined ? customProps.showQrText : false,
+        maxLines: customProps.maxLines !== undefined ? customProps.maxLines : 1
       };
 
       const elementObj = { ...defaultProps, ...customProps };
@@ -1803,6 +1852,48 @@ var QRCode;
         rawValue = (mappedVal !== undefined && mappedVal !== null) ? String(mappedVal) : '';
       }
       return `${el.prefix || ''}${rawValue}${el.suffix || ''}`;
+    }
+
+    // ĐO SỐ DÒNG THỰC TẾ MỘT ĐOẠN VĂN BẢN CẦN KHI TỰ ĐỘNG XUỐNG DÒNG Ở MỘT CHIỀU RỘNG CHO TRƯỚC.
+    // Dùng 1 div ẩn (position:absolute, visibility:hidden) để trình duyệt tự tính wrap
+    // theo đúng font-size/line-height thực tế, tránh phải tự viết lại thuật toán ngắt dòng.
+    function measureWrappedLineCount(text, widthPx, fontSizePx, fontWeight, lineHeightMultiplier) {
+      const measurer = document.createElement('div');
+      measurer.style.position = 'absolute';
+      measurer.style.visibility = 'hidden';
+      measurer.style.pointerEvents = 'none';
+      measurer.style.left = '-99999px';
+      measurer.style.top = '0';
+      measurer.style.width = Math.max(1, widthPx) + 'px';
+      measurer.style.fontSize = fontSizePx + 'px';
+      measurer.style.fontWeight = fontWeight || 'normal';
+      measurer.style.lineHeight = lineHeightMultiplier + '';
+      measurer.style.whiteSpace = 'normal';
+      measurer.style.overflowWrap = 'break-word';
+      measurer.style.wordBreak = 'break-word';
+      measurer.textContent = text || '';
+      document.body.appendChild(measurer);
+      const naturalHeight = measurer.scrollHeight;
+      document.body.removeChild(measurer);
+      const lineHeightPx = fontSizePx * lineHeightMultiplier;
+      return Math.max(1, Math.round(naturalHeight / lineHeightPx));
+    }
+
+    // TỰ ĐỘNG GIÃN CHIỀU CAO KHUNG (CHỈ GIÃN TO, KHÔNG BAO GIỜ TỰ THU NHỎ) ĐỂ VỪA ĐỦ
+    // CHỨA NỘI DUNG SAU KHI XUỐNG DÒNG, và giới hạn không vượt quá vùng thiết kế còn lại
+    // phía dưới (đồng bộ với logic clampElementToCanvas).
+    // Bỏ qua khi: (1) đang kéo/co giãn thủ công - tôn trọng thao tác người dùng ngay lúc đó,
+    // không "giành lại" chiều cao; (2) đang render phục vụ IN (targetCanvas khác canvas
+    // chính) - để tránh mỗi dòng dữ liệu dài/ngắn khác nhau lại làm lệch kích thước khung
+    // giữa các tem trong cùng một lượt in.
+    function autoGrowElementHeight(el, desiredHeightPx, targetCanvas) {
+      if (targetCanvas !== canvas) return;
+      if (isResizing || isDragging) return;
+      if (desiredHeightPx <= el.height) return;
+      const canvasH = canvas.clientHeight;
+      if (!canvasH) return;
+      const maxAllowed = Math.max(el.height, canvasH - el.top);
+      el.height = Math.min(desiredHeightPx, maxAllowed);
     }
 
     function renderElementDOM(el, targetCanvas = canvas, rowIndex = currentRowIndex) {
@@ -1864,6 +1955,33 @@ var QRCode;
         targetCanvas.appendChild(domEl);
       }
 
+      const displayContent = getElementDisplayContent(el, rowIndex);
+      const alignClass = el.textAlign === 'center' ? 'text-center' : (el.textAlign === 'right' ? 'text-right' : 'text-left');
+      const textMargin = el.textMargin !== undefined ? parseInt(el.textMargin) : 0;
+      const lineHeightMultiplier = 1.3; // chừa chỗ cho dấu tiếng Việt dưới dòng chữ (ệ, ụ, ọ...)
+      const maxLines = (el.maxLines && parseInt(el.maxLines) > 0) ? parseInt(el.maxLines) : 1;
+
+      // TỰ ĐỘNG GIÃN CAO KHUNG VĂN BẢN/TRƯỜNG EXCEL THEO SỐ DÒNG THỰC TẾ (giới hạn ở "Số dòng tối đa")
+      if (el.type === 'text' || el.type === 'field') {
+        const fontSizePx = el.fontSize || 12;
+        const lineHeightPx = fontSizePx * lineHeightMultiplier;
+        const naturalLines = measureWrappedLineCount(displayContent || '', el.width, fontSizePx, el.fontWeight, lineHeightMultiplier);
+        const cappedLines = Math.min(naturalLines, maxLines);
+        autoGrowElementHeight(el, cappedLines * lineHeightPx, targetCanvas);
+      }
+      // TỰ ĐỘNG GIÃN CAO KHUNG MÃ QR THEO ĐÚNG "SỐ DÒNG TỐI ĐA" ĐÃ CÀI ĐẶT (không phải số
+      // dòng thực tế của dữ liệu đang xem) - luôn dành sẵn không gian cho maxLines dòng chữ,
+      // để mã QR ra CÙNG 1 KÍCH THƯỚC CỐ ĐỊNH ở mọi dòng dữ liệu khi in cả loạt tem, tránh
+      // tình trạng dòng chữ ngắn thì QR to, dòng chữ dài thì QR bị bóp nhỏ lại không đều.
+      // Đồng thời luôn chừa tối thiểu 1 khoảng cho mã QR để vẫn quét được.
+      else if (el.type === 'qrcode' && el.showQrText) {
+        const fontSizePx = el.fontSize || 12;
+        const qrLabelLineHeightPx = Math.ceil(fontSizePx * lineHeightMultiplier);
+        const MIN_QR_SCANNABLE_SIZE = 60; // px - kích thước tối thiểu để mã QR còn quét được
+        const desiredTotalHeight = 8 /* qrBoxPadding */ + MIN_QR_SCANNABLE_SIZE + (maxLines * qrLabelLineHeightPx + textMargin);
+        autoGrowElementHeight(el, desiredTotalHeight, targetCanvas);
+      }
+
       domEl.style.left = el.left + 'px';
       domEl.style.top = el.top + 'px';
       domEl.style.width = el.width + 'px';
@@ -1879,16 +1997,16 @@ var QRCode;
       contentDiv.style.transformOrigin = 'center center';
       contentDiv.style.transform = `rotate(${normalizeRotation(el.rotation || 0)}deg)`;
 
-      const displayContent = getElementDisplayContent(el, rowIndex);
-      const alignClass = el.textAlign === 'center' ? 'text-center' : (el.textAlign === 'right' ? 'text-right' : 'text-left');
-      const textMargin = el.textMargin !== undefined ? parseInt(el.textMargin) : 2;
-
       if (el.type === 'text' || el.type === 'field') {
         contentDiv.className = 'element-content w-full h-full flex items-center overflow-hidden';
         contentDiv.style.fontSize = el.fontSize + 'px';
         contentDiv.style.fontWeight = el.fontWeight;
         contentDiv.style.justifyContent = el.textAlign === 'center' ? 'center' : (el.textAlign === 'right' ? 'flex-end' : 'flex-start');
-        contentDiv.innerHTML = `<span class="truncate w-full ${alignClass}">${displayContent || '(Rỗng)'}</span>`;
+        // Xuống dòng tự động (white-space:normal + break-word) khi chữ dài hơn chiều rộng khung.
+        // Nếu số dòng thực tế vẫn vượt "Số dòng tối đa" dù đã tự giãn cao hết mức có thể,
+        // dùng -webkit-line-clamp để cắt bớt kèm dấu "..." thay vì thu nhỏ cỡ chữ.
+        const textSpanStyle = `line-height: ${lineHeightMultiplier}; white-space: normal; overflow-wrap: break-word; word-break: break-word; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: ${maxLines}; overflow: hidden;`;
+        contentDiv.innerHTML = `<span class="w-full ${alignClass}" style="${textSpanStyle}">${displayContent || '(Rỗng)'}</span>`;
       } 
       else if (el.type === 'barcode') {
         contentDiv.className = 'element-content w-full h-full flex items-center justify-center overflow-hidden bg-white';
@@ -1924,7 +2042,13 @@ var QRCode;
         // cho các dấu tiếng Việt nằm dưới dòng chữ (ệ, ụ, ọ...) và phần chân chữ (descender),
         // tránh bị overflow-hidden của khung cắt mất một phần chữ phía dưới.
         const qrLabelLineHeight = Math.ceil(fontSize * 1.3);
-        const textHeightNeeded = el.showQrText ? (qrLabelLineHeight + textMargin) : 0;
+        // QUAN TRỌNG: luôn chừa chỗ theo đúng "Số dòng tối đa" đã cài đặt (maxLines),
+        // KHÔNG dùng số dòng thực tế của dữ liệu đang xem. Nếu dùng số dòng thực tế,
+        // mỗi dòng Excel dài/ngắn khác nhau sẽ làm mã QR to nhỏ khác nhau giữa các tem -
+        // in ra cả loạt sẽ không đều. Cố định theo maxLines giúp mã QR luôn ra ĐÚNG 1
+        // kích thước duy nhất ở mọi dòng dữ liệu.
+        const qrCaptionLines = el.showQrText ? maxLines : 0;
+        const textHeightNeeded = el.showQrText ? (qrCaptionLines * qrLabelLineHeight + textMargin) : 0;
         // contentDiv có "p-1" (4px padding mỗi phía) cộng box-sizing:border-box,
         // nên 8px trong el.width/el.height cố định là phần đệm, không phải vùng nội dung dùng được.
         // Không trừ phần này sẽ khiến mã QR + chữ tràn ra ngoài khung, bị overflow-hidden cắt mất
@@ -1936,9 +2060,17 @@ var QRCode;
         
         const qrDimension = Math.max(10, Math.floor(Math.min(maxAvailableQRWidth, maxAvailableQRHeight)));
 
+        // Chú thích dưới QR: xuống dòng tự động, cắt bớt kèm "..." nếu vẫn vượt "Số dòng tối đa"
+        // sau khi đã giãn khung hết mức có thể (không thu nhỏ cỡ chữ).
+        // QUAN TRỌNG: gán "height" cố định = đúng số dòng tối đa (thay vì để chiều cao tự
+        // co theo nội dung thực tế). Nếu không, dòng chữ ngắn (1 dòng) sẽ khiến cả khối
+        // "QR + chữ" thấp hơn dòng chữ dài (2 dòng), và vì đang canh giữa dọc (justify-center)
+        // trong khung, mã QR sẽ bị đẩy lên/xuống lệch vị trí giữa các tem khác nhau. Cố định
+        // chiều cao này giúp mã QR luôn đứng yên ở đúng 1 vị trí bất kể chữ ngắn hay dài.
+        const qrLabelStyle = `height: ${maxLines * qrLabelLineHeight}px; font-size: ${fontSize}px; line-height: ${qrLabelLineHeight}px; font-weight: ${el.fontWeight || 'normal'}; margin-top: ${textMargin}px; white-space: normal; overflow-wrap: break-word; word-break: break-word; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: ${maxLines}; overflow: hidden;`;
         contentDiv.innerHTML = `
           <div class="qr-target flex justify-center items-center shrink-0"></div>
-          ${el.showQrText ? `<div class="qr-text-label truncate w-full ${alignClass} shrink-0" style="font-size: ${fontSize}px; line-height: ${qrLabelLineHeight}px; font-weight: ${el.fontWeight || 'normal'}; margin-top: ${textMargin}px;">${displayContent || ''}</div>` : ''}
+          ${el.showQrText ? `<div class="qr-text-label w-full ${alignClass} shrink-0" style="${qrLabelStyle}">${displayContent || ''}</div>` : ''}
         `;
 
         const qrContainer = contentDiv.querySelector('.qr-target');
@@ -2047,30 +2179,35 @@ var QRCode;
       document.getElementById('prop-text-content').value = el.text || '';
       document.getElementById('prop-font-size').value = el.fontSize || 12;
       document.getElementById('prop-font-weight').value = el.fontWeight || 'normal';
+      document.getElementById('prop-max-lines').value = el.maxLines || 1;
 
       updateTextAlignButtons(el.textAlign || 'left');
 
       const textSection = document.getElementById('section-text-style');
       const barcodeSection = document.getElementById('section-barcode-style');
       const qrcodeSection = document.getElementById('section-qrcode-style');
+      const maxLinesWrapper = document.getElementById('prop-max-lines-wrapper');
 
       if (el.type === 'text' || el.type === 'field') {
         textSection.classList.remove('hidden');
         barcodeSection.classList.add('hidden');
         qrcodeSection.classList.add('hidden');
+        maxLinesWrapper.classList.remove('hidden');
       } else if (el.type === 'barcode') {
         textSection.classList.remove('hidden');
         barcodeSection.classList.remove('hidden');
         qrcodeSection.classList.add('hidden');
+        maxLinesWrapper.classList.add('hidden'); // chữ số dưới mã vạch là 1 dòng cố định, không áp dụng xuống dòng
         document.getElementById('prop-barcode-format').value = el.barcodeFormat || 'CODE128';
         document.getElementById('prop-barcode-text').checked = el.showBarcodeText;
-        document.getElementById('prop-text-margin').value = el.textMargin !== undefined ? el.textMargin : 2;
+        document.getElementById('prop-text-margin').value = el.textMargin !== undefined ? el.textMargin : 0;
       } else if (el.type === 'qrcode') {
         textSection.classList.remove('hidden');
         barcodeSection.classList.add('hidden');
         qrcodeSection.classList.remove('hidden');
+        maxLinesWrapper.classList.remove('hidden');
         document.getElementById('prop-qrcode-text').checked = el.showQrText || false;
-        document.getElementById('prop-qr-text-margin').value = el.textMargin !== undefined ? el.textMargin : 2;
+        document.getElementById('prop-qr-text-margin').value = el.textMargin !== undefined ? el.textMargin : 0;
       } else {
         textSection.classList.add('hidden');
         barcodeSection.classList.add('hidden');
@@ -2090,6 +2227,7 @@ var QRCode;
       el.text = document.getElementById('prop-text-content').value;
       el.fontSize = parseInt(document.getElementById('prop-font-size').value) || 12;
       el.fontWeight = document.getElementById('prop-font-weight').value;
+      el.maxLines = Math.max(1, parseInt(document.getElementById('prop-max-lines').value) || 1);
 
       el.barcodeFormat = document.getElementById('prop-barcode-format').value;
       el.showBarcodeText = document.getElementById('prop-barcode-text').checked;
