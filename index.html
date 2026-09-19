@@ -15,21 +15,28 @@
        phần tử DOM/SVG không khai báo color-scheme. Vấn đề là cơ chế này ĐẢO MÀU KHÔNG
        NHẤT QUÁN cho SVG của mã vạch: nó đảo phần vạch (fill của <g>) thành trắng nhưng
        lại KHÔNG đảo nền (fill của <rect> nền, một phần tử riêng) — kết quả là "trắng
-       trên trắng", không nhìn thấy gì.
-       Giải pháp: loại trừ mã vạch khỏi cơ chế đảo màu không đáng tin đó (color-scheme:
-       only light — chỉ áp dụng cho riêng phần tử này, không đặt ở :root/html nên phần
-       còn lại của app vẫn tự chuyển tối bình thường), rồi TỰ đảo màu một cách nhất quán
-       bằng filter: invert() khi phát hiện trình duyệt đang ở dark mode. Kết quả: vạch đen
-       + nền trắng (bình thường) sẽ trở thành vạch trắng + nền đen (dark mode) — đúng như
-       mong muốn, và luôn nhất quán vì do chính CSS của mình kiểm soát chứ không phải
-       "đoán" của trình duyệt. */
-    .barcode-svg {
+       trên trắng", không nhìn thấy gì. Còn mã QR là ảnh raster (<img>/<canvas>) nên vốn
+       không bị cơ chế này đụng vào, nhưng vì vậy nó cũng sẽ KHÔNG tự đảo màu theo ý muốn.
+
+       Giải pháp:
+       1) Loại trừ mã vạch khỏi cơ chế đảo màu không đáng tin đó (color-scheme: only light
+          — chỉ áp dụng cho riêng các phần tử này, không đặt ở :root/html, nên phần còn lại
+          của app vẫn tự chuyển tối bình thường).
+       2) Chủ động đảo màu một cách NHẤT QUÁN bằng filter: invert() cho cả mã vạch lẫn mã QR
+          khi phát hiện trình duyệt đang ở chế độ tối — dựa vào class "auto-dark-active" do
+          JS gắn lên <html> (script cuối trang), thay vì chỉ dựa @media (prefers-color-scheme:
+          dark), vì một số cách bật dark mode (như nút riêng theo trang của Edge) không phản
+          ánh qua media query đó. Kết quả: vạch/mã đen + nền trắng (bình thường) sẽ trở thành
+          trắng + nền đen (dark mode) — nhất quán, do CSS của mình kiểm soát hoàn toàn. */
+    .barcode-svg,
+    .qr-target img,
+    .qr-target canvas {
       color-scheme: only light;
     }
-    @media (prefers-color-scheme: dark) {
-      .barcode-svg {
-        filter: invert(1);
-      }
+    html.auto-dark-active .barcode-svg,
+    html.auto-dark-active .qr-target img,
+    html.auto-dark-active .qr-target canvas {
+      filter: invert(1);
     }
   </style>
   <!-- FontAwesome -->
@@ -989,6 +996,11 @@ var QRCode;
   </style>
 </head>
 <body class="bg-slate-100 font-sans h-screen flex flex-col overflow-hidden">
+  <!-- Dò xem trình duyệt có đang tự "vẽ đè" tối (Auto Dark Theme / force-dark) hay không.
+       Không dùng @media (prefers-color-scheme: dark) vì một số cơ chế (ví dụ nút "Duyệt web
+       chế độ tối" của Edge) không thay đổi giá trị đó, nhưng vẫn kích hoạt việc tô lại màu
+       nền mặc định (canvas) — nên có thể dò ra bằng cách so màu nền tính toán được. -->
+  <div id="autoDarkProbe" style="position:fixed; width:0; height:0; overflow:hidden; pointer-events:none; background-color:Canvas; color-scheme:light;" aria-hidden="true"></div>
 
   <!-- HEADER OPTIMIZED FOR ZOOM & RESPONSIVE -->
   <header class="bg-slate-800 text-white min-h-[3.5rem] py-2 px-4 flex flex-wrap items-center justify-between gap-3 shadow-md z-20 shrink-0 overflow-y-auto max-h-[40vh]">
@@ -2908,6 +2920,42 @@ var QRCode;
         updatePrintRangeVisibility();
       }
     });
+
+    // Bật/tắt class "auto-dark-active" trên <html> dựa trên việc trình duyệt có đang tự
+    // "vẽ đè" tối lên trang hay không (Auto Dark Theme / force-dark), phát hiện bằng cách
+    // so màu nền mặc định (Canvas) đã bị trình duyệt đổi hay chưa — cách này bắt được MỌI
+    // nguồn kích hoạt (theme hệ điều hành thật, cờ chrome/edge://flags, hay nút bật/tắt
+    // riêng theo từng trang của Edge), khác với prefers-color-scheme vốn không phản ánh
+    // hết các trường hợp này.
+    (function () {
+      const probe = document.getElementById('autoDarkProbe');
+      if (!probe) return;
+      let lastState = null;
+      function checkAutoDark() {
+        let bg;
+        try {
+          bg = getComputedStyle(probe).backgroundColor;
+        } catch (e) {
+          return;
+        }
+        const isAutoDark = bg !== 'rgb(255, 255, 255)' && bg !== '#ffffff';
+        if (isAutoDark !== lastState) {
+          lastState = isAutoDark;
+          document.documentElement.classList.toggle('auto-dark-active', isAutoDark);
+        }
+      }
+      checkAutoDark();
+      document.addEventListener('visibilitychange', checkAutoDark);
+      window.addEventListener('focus', checkAutoDark);
+      if (window.matchMedia) {
+        try {
+          window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', checkAutoDark);
+        } catch (e) {}
+      }
+      // Một số cơ chế (như nút bật/tắt riêng theo trang của Edge) không phát sự kiện nào
+      // cả, nên vẫn cần dò định kỳ để bắt kịp thay đổi mà không cần tải lại trang.
+      setInterval(checkAutoDark, 1000);
+    })();
   </script>
 </body>
 </html>
