@@ -18,6 +18,7 @@
       "main.js",
       "preload.js",
       "app/**/*",
+      "build/icon.png",
       "package.json"
     ],
     "fileAssociations": [
@@ -55,19 +56,22 @@
     "mac": {
       "target": [
         {
-          "target": "zip",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
+          "target": "dmg"
+        },
+        {
+          "target": "zip"
         }
       ],
-      "icon": "build/icon.png",
-      "category": "public.app-category.productivity"
+      "category": "public.app-category.productivity",
+      "icon": "build/icon.png"
     }
   },
   "devDependencies": {
     "electron": "31.7.7",
     "electron-builder": "24.13.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ngthhung-dev/bartender-lite.git"
   }
 }
