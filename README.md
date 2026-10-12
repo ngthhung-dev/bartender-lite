@@ -16,3 +16,9 @@ npx electron-builder --win nsis --x64                 # cần wine nếu build t
 npx electron-builder --linux AppImage deb --x64
 npx electron-builder --mac zip --x64 --arm64
 ```
+
+## Bản cài (thư mục builds/)
+- Windows: `Bartender Lite Setup 1.0.0.exe`
+- Linux Mint/Ubuntu: `bartender-lite_1.0.0_amd64.deb`
+- Linux AppImage: AppImage vượt 100 MB nên chia 2 phần `BartenderLite-1.0.0.AppImage.part00/01`; chạy `bash builds/ghep_appimage.sh` để ghép
+- macOS: `Bartender Lite-1.0.0-mac.zip` (Intel), `Bartender Lite-1.0.0-arm64-mac.zip` (Apple Silicon)
