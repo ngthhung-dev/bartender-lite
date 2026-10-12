@@ -19,19 +19,18 @@
 - Giao diện 5 ngôn ngữ: Tiếng Việt, English, 简体中文, 한국어, 日本語.
 
 ## Tải về
-Các bản cài nằm trong thư mục [`builds/`](builds/):
+Tải bản cài mới nhất ở trang [**Releases**](../../releases/latest):
 
 | Hệ điều hành | File |
 |---|---|
-| Windows | `Bartender Lite Setup 1.0.0.exe` |
-| Linux Mint / Ubuntu / Debian | `bartender-lite_1.0.0_amd64.deb` |
-| Linux (AppImage) | `BartenderLite-1.0.0.AppImage.part00` + `part01`, ghép bằng `bash builds/ghep_appimage.sh` |
-| macOS Intel | `Bartender Lite-1.0.0-mac.zip` |
-| macOS Apple Silicon (M1/M2/M3) | `Bartender Lite-1.0.0-arm64-mac.zip` |
+| Windows | `Bartender.Lite.Setup.1.0.0.exe` |
+| Linux Mint / Ubuntu / Debian | `bartender-lite_1.0.0_amd64.deb` hoặc `Bartender.Lite-1.0.0.AppImage` |
+| macOS Intel | `Bartender.Lite-1.0.0.dmg` hoặc `-mac.zip` |
+| macOS Apple Silicon (M1/M2/M3) | `Bartender.Lite-1.0.0-arm64.dmg` hoặc `-arm64-mac.zip` |
 
 ### Cài đặt
 - **Windows:** chạy file `.exe`. Nếu SmartScreen cảnh báo (app chưa ký số), chọn *More info* → *Run anyway*.
-- **Linux:** `sudo apt install ./bartender-lite_1.0.0_amd64.deb`. Với AppImage: ghép file, `chmod +x`, rồi chạy.
+- **Linux:** `sudo apt install ./bartender-lite_1.0.0_amd64.deb`. Với AppImage: `chmod +x Bartender.Lite-1.0.0.AppImage` rồi chạy.
 - **macOS:** giải nén `.zip`, chuột phải vào app → *Open* ở lần mở đầu (app chưa ký số).
 
 ## Hướng dẫn sử dụng
@@ -61,7 +60,7 @@ npx electron-builder --win nsis --x64                   # Windows (cần wine n�
 npx electron-builder --linux AppImage deb --x64         # Linux
 npx electron-builder --mac zip --x64 --arm64            # macOS
 ```
-Kết quả nằm trong `dist/`.
+Kết quả nằm trong `dist/`. Có thể build tự động trên GitHub: tab **Actions** → *Build installers* → *Run workflow* (nhập tag, ví dụ `v1.0.0`); bản cài sẽ được đính vào Release tương ứng.
 
 ## Cấu trúc
 ```
@@ -70,11 +69,11 @@ main.js     tiến trình chính Electron (cửa sổ, in, IPC)
 preload.js  cầu nối an toàn giữa giao diện và main
 build/      icon ứng dụng
 docs/       hướng dẫn sử dụng 5 ngôn ngữ
-builds/     bản cài
+.github/    workflow tự build bản cài (GitHub Actions)
 ```
 
 ## English summary
-Bartender Lite is a free desktop label designer: drag-and-drop text, Excel fields, barcodes, QR codes, shapes and images; import Excel/CSV and map columns for bulk printing; print directly to any printer or export a PDF at the exact label size. UI in Vietnamese, English, Chinese, Korean and Japanese. Installers for Windows, Linux and macOS are in [`builds/`](builds/); user guides in [`docs/`](docs/).
+Bartender Lite is a free desktop label designer: drag-and-drop text, Excel fields, barcodes, QR codes, shapes and images; import Excel/CSV and map columns for bulk printing; print directly to any printer or export a PDF at the exact label size. UI in Vietnamese, English, Chinese, Korean and Japanese. Installers for Windows, Linux and macOS are on the [Releases](../../releases/latest) page; user guides in [`docs/`](docs/).
 
 ## Tác giả
 ngthhung
