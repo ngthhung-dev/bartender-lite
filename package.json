@@ -1,0 +1,73 @@
+{
+  "name": "bartender-lite",
+  "version": "1.0.0",
+  "description": "Bartender Lite by ngthhung",
+  "main": "main.js",
+  "author": {
+    "name": "ngthhung",
+    "email": "ngthhung@example.com"
+  },
+  "homepage": "https://github.com/ngthhung/bartender-lite",
+  "build": {
+    "appId": "com.ngthhung.bartenderlite",
+    "productName": "Bartender Lite",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "app/**/*",
+      "package.json"
+    ],
+    "fileAssociations": [
+      {
+        "ext": "json",
+        "name": "Bartender Lite Template",
+        "description": "Bartender Lite Template",
+        "role": "Editor"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "build/icon.png",
+      "category": "Office",
+      "maintainer": "ngthhung <ngthhung@example.com>"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png",
+      "category": "public.app-category.productivity"
+    }
+  },
+  "devDependencies": {
+    "electron": "31.7.7",
+    "electron-builder": "24.13.3"
+  }
+}
