@@ -56,12 +56,11 @@
     "mac": {
       "target": [
         {
-          "target": "pkg"
+          "target": "dir"
         }
       ],
       "icon": "build/icon.png",
-      "category": "public.app-category.productivity",
-      "artifactName": "Bartender-Lite-${version}-build${env.BUILD_NUMBER}-macOS-${arch}.${ext}"
+      "category": "public.app-category.productivity"
     },
     "deb": {
       "artifactName": "bartender-lite_${version}-build${env.BUILD_NUMBER}_${arch}.${ext}"

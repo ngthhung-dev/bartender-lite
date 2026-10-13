@@ -35,7 +35,7 @@ jobs:
             args: --linux deb --x64
           - os: macos-latest
             name: macos
-            args: --mac pkg --x64 --arm64
+            args: --mac dir --x64 --arm64
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -46,13 +46,18 @@ jobs:
       - run: npx electron-builder ${{ matrix.args }} --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
-      - name: Đổi tên arch macOS
+      - name: Đóng gói .pkg macOS
         if: matrix.name == 'macos'
         shell: bash
         run: |
-          cd dist
-          for f in *-arm64.pkg; do mv "$f" "${f/-arm64.pkg/-AppleSilicon.pkg}"; done
-          for f in *-x64.pkg; do mv "$f" "${f/-x64.pkg/-Intel.pkg}"; done
+          V=$(node -p "require('./package.json').version")
+          mkdir -p out
+          for pair in "mac:Intel" "mac-arm64:AppleSilicon"; do
+            dir="${pair%%:*}"; label="${pair##*:}"
+            pkgbuild --component "dist/$dir/Bartender Lite.app" --install-location /Applications \
+              "dist/Bartender-Lite-$V-build$BUILD_NUMBER-macOS-$label.pkg"
+          done
+          ls -la dist/*.pkg
       - uses: actions/upload-artifact@v4
         with:
           name: installer-${{ matrix.name }}
