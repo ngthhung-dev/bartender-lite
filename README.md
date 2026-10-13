@@ -19,19 +19,19 @@
 - Giao diện 5 ngôn ngữ: Tiếng Việt, English, 简体中文, 한국어, 日本語.
 
 ## Tải về
-Tải bản cài mới nhất ở trang [**Releases**](../../releases/latest):
+Tải bản cài mới nhất ở trang [**Releases**](../../releases/latest). Mỗi lần build tự động có tag `v<phiên bản>-build<số>` (ví dụ `v1.0.0-build42`):
 
 | Hệ điều hành | File |
 |---|---|
-| Windows | `Bartender.Lite.Setup.1.0.0.exe` |
-| Linux Mint / Ubuntu / Debian | `bartender-lite_1.0.0_amd64.deb` hoặc `Bartender.Lite-1.0.0.AppImage` |
-| macOS Intel | `Bartender.Lite-1.0.0.dmg` hoặc `-mac.zip` |
-| macOS Apple Silicon (M1/M2/M3) | `Bartender.Lite-1.0.0-arm64.dmg` hoặc `-arm64-mac.zip` |
+| Windows 64-bit | `Bartender-Lite-1.0.0-build<N>-Setup.exe` |
+| macOS chip Apple (M1 trở lên) | `Bartender-Lite-1.0.0-build<N>-macOS-AppleSilicon.pkg` |
+| macOS chip Intel | `Bartender-Lite-1.0.0-build<N>-macOS-Intel.pkg` |
+| Linux Mint / Ubuntu / Debian 64-bit | `bartender-lite_1.0.0-build<N>_amd64.deb` |
 
 ### Cài đặt
 - **Windows:** chạy file `.exe`. Nếu SmartScreen cảnh báo (app chưa ký số), chọn *More info* → *Run anyway*.
-- **Linux:** `sudo apt install ./bartender-lite_1.0.0_amd64.deb`. Với AppImage: `chmod +x Bartender.Lite-1.0.0.AppImage` rồi chạy.
-- **macOS:** giải nén `.zip`, chuột phải vào app → *Open* ở lần mở đầu (app chưa ký số).
+- **Linux:** `sudo apt install ./bartender-lite_1.0.0-build<N>_amd64.deb`.
+- **macOS:** mở file `.pkg`; app chưa ký số nên lần đầu bấm chuột phải vào `.pkg` → *Open* (hoặc System Settings → Privacy & Security → Open Anyway).
 
 ## Hướng dẫn sử dụng
 Hướng dẫn đầy đủ có hình minh họa trong thư mục [`docs/`](docs/):
@@ -57,10 +57,10 @@ Yêu cầu Node.js 18+.
 npm install
 npx electron .                                          # chạy thử
 npx electron-builder --win nsis --x64                   # Windows (cần wine nếu build trên Linux)
-npx electron-builder --linux AppImage deb --x64         # Linux
-npx electron-builder --mac zip --x64 --arm64            # macOS
+npx electron-builder --linux deb --x64                  # Linux
+npx electron-builder --mac pkg --x64 --arm64            # macOS
 ```
-Kết quả nằm trong `dist/`. Có thể build tự động trên GitHub: tab **Actions** → *Build installers* → *Run workflow* (nhập tag, ví dụ `v1.0.0`); bản cài sẽ được đính vào Release tương ứng.
+Kết quả nằm trong `dist/`. Mỗi lần push lên `main` (trừ khi chỉ sửa `.md`/`docs/`), GitHub Actions tự build 3 hệ điều hành và tạo Release mới. Cũng có thể chạy tay ở tab **Actions** → *Build installers* → *Run workflow*.
 
 ## Cấu trúc
 ```

@@ -1,17 +1,25 @@
 name: Build installers
 
+# Quy ước đặt tên (giống PDF Editor Lite):
+#   tag      : v<version>-build<N>          (vd v1.0.0-build42)
+#   release  : Bartender Lite <version> (build <N>)
+#   file cài : Bartender-Lite-<version>-build<N>-Setup.exe
+#              Bartender-Lite-<version>-build<N>-macOS-AppleSilicon.pkg
+#              Bartender-Lite-<version>-build<N>-macOS-Intel.pkg
+#              bartender-lite_<version>-build<N>_amd64.deb
+# <N> = số lần chạy workflow (github.run_number), tự tăng mỗi lần build.
+
 on:
   workflow_dispatch:
-    inputs:
-      tag:
-        description: "Release tag to upload to (e.g. v1.0.0)"
-        required: true
-        default: "v1.0.0"
   push:
-    tags: ["v*"]
+    branches: [main]
+    paths-ignore: ["**.md", "docs/**"]
 
 permissions:
   contents: write
+
+env:
+  BUILD_NUMBER: ${{ github.run_number }}
 
 jobs:
   build:
@@ -20,11 +28,14 @@ jobs:
       matrix:
         include:
           - os: windows-latest
+            name: windows
             args: --win nsis --x64
           - os: ubuntu-latest
-            args: --linux AppImage deb --x64
+            name: linux
+            args: --linux deb --x64
           - os: macos-latest
-            args: --mac dmg zip --x64 --arm64
+            name: macos
+            args: --mac pkg --x64 --arm64
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -35,13 +46,45 @@ jobs:
       - run: npx electron-builder ${{ matrix.args }} --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
-      - name: Upload to release
-        uses: softprops/action-gh-release@v2
+      - name: Đổi tên arch macOS
+        if: matrix.name == 'macos'
+        shell: bash
+        run: |
+          cd dist
+          for f in *-arm64.pkg; do mv "$f" "${f/-arm64.pkg/-AppleSilicon.pkg}"; done
+          for f in *-x64.pkg; do mv "$f" "${f/-x64.pkg/-Intel.pkg}"; done
+      - uses: actions/upload-artifact@v4
         with:
-          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
-          files: |
+          name: installer-${{ matrix.name }}
+          path: |
             dist/*.exe
             dist/*.deb
-            dist/*.AppImage
-            dist/*.dmg
-            dist/*.zip
+            dist/*.pkg
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+      - name: Lấy version
+        id: v
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.v.outputs.version }}-build${{ github.run_number }}
+          name: Bartender Lite ${{ steps.v.outputs.version }} (build ${{ github.run_number }})
+          target_commitish: ${{ github.sha }}
+          make_latest: true
+          files: out/*
+          body: |
+            Bo cai tao tu dong (dong Bartender Lite truoc khi cai):
+
+            - Windows 64-bit: file ...-Setup.exe
+            - macOS may chip Apple (M1 tro len): file ...-macOS-AppleSilicon.pkg
+            - macOS may chip Intel: file ...-macOS-Intel.pkg
+            - Linux Mint / Ubuntu / Debian 64-bit: file .deb
+              macOS: bo cai chua co chu ky Apple, lan dau bam chuot phai vao file .pkg > Open (hoac System Settings > Privacy & Security > Open Anyway).

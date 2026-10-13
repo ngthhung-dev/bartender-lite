@@ -38,7 +38,8 @@
           ]
         }
       ],
-      "icon": "build/icon.png"
+      "icon": "build/icon.png",
+      "artifactName": "Bartender-Lite-${version}-build${env.BUILD_NUMBER}-Setup.${ext}"
     },
     "nsis": {
       "oneClick": false,
@@ -46,7 +47,6 @@
     },
     "linux": {
       "target": [
-        "AppImage",
         "deb"
       ],
       "icon": "build/icon.png",
@@ -56,14 +56,15 @@
     "mac": {
       "target": [
         {
-          "target": "dmg"
-        },
-        {
-          "target": "zip"
+          "target": "pkg"
         }
       ],
+      "icon": "build/icon.png",
       "category": "public.app-category.productivity",
-      "icon": "build/icon.png"
+      "artifactName": "Bartender-Lite-${version}-build${env.BUILD_NUMBER}-macOS-${arch}.${ext}"
+    },
+    "deb": {
+      "artifactName": "bartender-lite_${version}-build${env.BUILD_NUMBER}_${arch}.${ext}"
     }
   },
   "devDependencies": {
