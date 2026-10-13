@@ -2,7 +2,7 @@ const { app, BrowserWindow, Menu, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
-const { exec } = require('child_process');
+const { execFile } = require('child_process');
 
 let mainWindow = null;
 
@@ -61,11 +61,18 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      sandbox: true,
       preload: path.join(__dirname, 'preload.js'),
     },
   });
 
   mainWindow = win;
+
+  // Chan dieu huong / mo cua so moi ngoai app (ung dung hoan toan offline).
+  win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  win.webContents.on('will-navigate', (event, url) => {
+    if (!url.startsWith('file://')) event.preventDefault();
+  });
 
   Menu.setApplicationMenu(null);
   win.loadFile(path.join(__dirname, 'app', 'index.html'));
@@ -108,12 +115,19 @@ ipcMain.handle('get-printers', async (event) => {
   }
 });
 
+// Chay PowerShell KHONG qua shell trung gian (execFile + mang tham so) de ten may in /
+// duong dan co ky tu dac biet khong the chen them lenh.
 function runPs(command) {
   return new Promise((resolve, reject) => {
-    exec(`powershell -NoProfile -WindowStyle Hidden -Command "${command}"`, (error, stdout) => {
-      if (error) reject(error);
-      else resolve((stdout || '').trim());
-    });
+    execFile(
+      'powershell',
+      ['-NoProfile', '-NonInteractive', '-WindowStyle', 'Hidden', '-Command', command],
+      { windowsHide: true },
+      (error, stdout) => {
+        if (error) reject(error);
+        else resolve((stdout || '').trim());
+      }
+    );
   });
 }
 
@@ -126,8 +140,10 @@ async function getWindowsDefaultPrinter() {
 }
 
 async function setWindowsDefaultPrinter(printerName) {
-  const escaped = printerName.replace(/'/g, "''");
-  await runPs(`Get-CimInstance -ClassName Win32_Printer -Filter \\"Name='${escaped}'\\" | Invoke-CimMethod -MethodName SetDefaultPrinter`);
+  // Loc WQL: escape \ va '. Chuoi PowerShell trong "..." : escape ` $ ".
+  const wql = String(printerName).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  const ps = wql.replace(/[`$"]/g, (c) => '`' + c);
+  await runPs(`Get-CimInstance -ClassName Win32_Printer -Filter "Name='${ps}'" | Invoke-CimMethod -MethodName SetDefaultPrinter`);
 }
 
 // CACH DANG TIN CAY NHAT: uy thac viec in PDF cho chinh UNG DUNG DOC PDF MAC
@@ -141,10 +157,11 @@ async function setWindowsDefaultPrinter(printerName) {
 // ta TAM THOI doi may in mac dinh sang may duoc chon, in xong roi doi lai
 // may in mac dinh cu. Tren Linux dung truc tiep tuy chon -d cua lenh lp,
 // khong can "meo" doi may in mac dinh.
-ipcMain.handle('print-pdf-buffer', async (event, base64Pdf, paperSizeMm, printerName) => {
+ipcMain.handle('print-pdf-buffer', async (event, pdfData, paperSizeMm, printerName) => {
   const tempPath = path.join(os.tmpdir(), `bartender-print-${Date.now()}.pdf`);
-  const buffer = Buffer.from(base64Pdf, 'base64');
-  fs.writeFileSync(tempPath, buffer);
+  // Nhan bo dem nhi phan (Uint8Array) tu renderer; van chap nhan base64 (ban cu).
+  const buffer = typeof pdfData === 'string' ? Buffer.from(pdfData, 'base64') : Buffer.from(pdfData);
+  await fs.promises.writeFile(tempPath, buffer);
 
   const cleanup = () => setTimeout(() => fs.unlink(tempPath, () => {}), 30000);
 
@@ -161,10 +178,10 @@ ipcMain.handle('print-pdf-buffer', async (event, base64Pdf, paperSizeMm, printer
       const result = await new Promise((resolve) => {
         const escapedPath = tempPath.replace(/'/g, "''");
         const psCommand = `Start-Process -FilePath '${escapedPath}' -Verb Print`;
-        exec(`powershell -NoProfile -WindowStyle Hidden -Command "${psCommand}"`, (error) => {
-          if (error) resolve({ success: false, errorType: error.message });
-          else resolve({ success: true, errorType: null });
-        });
+        runPs(psCommand).then(
+          () => resolve({ success: true, errorType: null }),
+          (error) => resolve({ success: false, errorType: error.message })
+        );
       });
 
       // Cho vai giay de lenh in duoc spool xong truoc khi doi lai may in mac dinh.
@@ -184,8 +201,8 @@ ipcMain.handle('print-pdf-buffer', async (event, base64Pdf, paperSizeMm, printer
 
   if (process.platform === 'linux') {
     return new Promise((resolve) => {
-      const printerArg = printerName ? `-d "${printerName}"` : '';
-      exec(`lp ${printerArg} "${tempPath}"`, (error) => {
+      const lpArgs = printerName ? ['-d', String(printerName), tempPath] : [tempPath];
+      execFile('lp', lpArgs, (error) => {
         cleanup();
         resolve({ success: !error, errorType: error ? error.message : null });
       });
@@ -234,17 +251,31 @@ ipcMain.handle('print-pdf-buffer', async (event, base64Pdf, paperSizeMm, printer
 // nguoi dung biet va tu chon lai file.
 ipcMain.handle('read-file-by-path', async (event, filePath) => {
   try {
-    if (!filePath || !fs.existsSync(filePath)) {
+    if (!filePath || typeof filePath !== 'string' || !fs.existsSync(filePath)) {
       return { success: false, errorType: 'not_found' };
     }
-    const buffer = fs.readFileSync(filePath);
-    return { success: true, base64: buffer.toString('base64') };
+    // Chi cho doc dung cac dinh dang ma app su dung (mau .json, du lieu Excel/CSV).
+    if (!/\.(json|xlsx|xls|csv)$/i.test(filePath)) {
+      return { success: false, errorType: 'unsupported_type' };
+    }
+    const buffer = await fs.promises.readFile(filePath);
+    // Tra ve du lieu nhi phan (Uint8Array) - khong chuyen qua base64.
+    return { success: true, data: new Uint8Array(buffer) };
   } catch (err) {
     return { success: false, errorType: err.message };
   }
 });
 
+// Lay lai focus cua so sau hop thoai alert/confirm (loi Electron tren Windows).
+ipcMain.on('refocus-window', () => {
+  if (!mainWindow) return;
+  mainWindow.blur();
+  mainWindow.focus();
+  mainWindow.webContents.focus();
+});
+
 app.whenReady().then(() => {
+  if (!gotSingleInstanceLock) return; // ban sao thu 2: dang thoat, khong tao cua so
   createWindow();
 
   app.on('activate', () => {
