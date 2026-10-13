@@ -7,7 +7,7 @@ name: Build installers
 #              Bartender-Lite-<version>-build<N>-macOS-AppleSilicon.pkg
 #              Bartender-Lite-<version>-build<N>-macOS-Intel.pkg
 #              bartender-lite_<version>-build<N>_amd64.deb
-# <N> = số lần chạy workflow (github.run_number), tự tăng mỗi lần build.
+# <N> = github.run_number trừ mốc BASE trong job setup (reset về build 1 sau run 5).
 
 on:
   workflow_dispatch:
@@ -18,11 +18,22 @@ on:
 permissions:
   contents: write
 
-env:
-  BUILD_NUMBER: ${{ github.run_number }}
-
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      build: ${{ steps.n.outputs.build }}
+    steps:
+      - id: n
+        # Đặt lại số build về 1: run_number trừ đi mốc BASE (đã dùng tới run 5).
+        # Muốn reset lần nữa: tăng BASE = run_number của lần chạy cuối.
+        run: |
+          BASE=5
+          echo "build=$(( ${{ github.run_number }} - BASE ))" >> "$GITHUB_OUTPUT"
   build:
+    needs: setup
+    env:
+      BUILD_NUMBER: ${{ needs.setup.outputs.build }}
     strategy:
       fail-fast: false
       matrix:
@@ -55,6 +66,7 @@ jobs:
           for pair in "mac:Intel" "mac-arm64:AppleSilicon"; do
             dir="${pair%%:*}"; label="${pair##*:}"
             pkgbuild --component "dist/$dir/Bartender Lite.app" --install-location /Applications \
+              --identifier com.ngthhung.bartenderlite --version "$V" \
               "dist/Bartender-Lite-$V-build$BUILD_NUMBER-macOS-$label.pkg"
           done
           ls -la dist/*.pkg
@@ -67,7 +79,7 @@ jobs:
             dist/*.pkg
 
   release:
-    needs: build
+    needs: [setup, build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -80,8 +92,8 @@ jobs:
         run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.v.outputs.version }}-build${{ github.run_number }}
-          name: Bartender Lite ${{ steps.v.outputs.version }} (build ${{ github.run_number }})
+          tag_name: v${{ steps.v.outputs.version }}-build${{ needs.setup.outputs.build }}
+          name: Bartender Lite ${{ steps.v.outputs.version }} (build ${{ needs.setup.outputs.build }})
           target_commitish: ${{ github.sha }}
           make_latest: true
           files: out/*

@@ -5,9 +5,10 @@
   "main": "main.js",
   "author": {
     "name": "ngthhung",
-    "email": "ngthhung@example.com"
+    "email": "ngthhung.dev@gmail.com",
+    "url": "https://github.com/ngthhung-dev"
   },
-  "homepage": "https://github.com/ngthhung/bartender-lite",
+  "homepage": "https://github.com/ngthhung-dev/bartender-lite",
   "build": {
     "appId": "com.ngthhung.bartenderlite",
     "productName": "Bartender Lite",
@@ -39,7 +40,8 @@
         }
       ],
       "icon": "build/icon.png",
-      "artifactName": "Bartender-Lite-${version}-build${env.BUILD_NUMBER}-Setup.${ext}"
+      "artifactName": "Bartender-Lite-${version}-build${env.BUILD_NUMBER}-Setup.${ext}",
+      "legalTrademarks": "ngthhung"
     },
     "nsis": {
       "oneClick": false,
@@ -51,7 +53,10 @@
       ],
       "icon": "build/icon.png",
       "category": "Office",
-      "maintainer": "ngthhung <ngthhung@example.com>"
+      "maintainer": "ngthhung <ngthhung.dev@gmail.com>",
+      "vendor": "ngthhung",
+      "synopsis": "Bartender Lite by ngthhung",
+      "description": "Bartender Lite by ngthhung - thiet ke tem nhan, nap Excel, in va xuat PDF. Lien he: ngthhung.dev@gmail.com - 0968 799 365"
     },
     "mac": {
       "target": [
@@ -60,11 +65,15 @@
         }
       ],
       "icon": "build/icon.png",
-      "category": "public.app-category.productivity"
+      "category": "public.app-category.productivity",
+      "extendInfo": {
+        "CFBundleGetInfoString": "Bartender Lite by ngthhung - ngthhung.dev@gmail.com - 0968 799 365"
+      }
     },
     "deb": {
       "artifactName": "bartender-lite_${version}-build${env.BUILD_NUMBER}_${arch}.${ext}"
-    }
+    },
+    "copyright": "Copyright © 2026 ngthhung | ngthhung.dev@gmail.com | 0968 799 365"
   },
   "devDependencies": {
     "electron": "31.7.7",
