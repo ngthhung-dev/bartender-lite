@@ -78,4 +78,4 @@ docs/       hướng dẫn sử dụng 5 ngôn ngữ
 Bartender Lite is a free desktop label designer: drag-and-drop text, Excel fields, barcodes, QR codes, shapes and images; import Excel/CSV and map columns for bulk printing; print directly to any printer or export a PDF at the exact label size. UI in Vietnamese, English, Chinese, Korean and Japanese. Installers for Windows, Linux and macOS are on the [Releases](../../releases/latest) page; user guides in [`docs/`](docs/).
 
 ## Tác giả
-ngthhung - ngthhung.dev@gmail.com - 0968 799 365
+ngthhung

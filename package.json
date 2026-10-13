@@ -5,7 +5,6 @@
   "main": "main.js",
   "author": {
     "name": "ngthhung",
-    "email": "ngthhung.dev@gmail.com",
     "url": "https://github.com/ngthhung-dev"
   },
   "homepage": "https://github.com/ngthhung-dev/bartender-lite",
@@ -53,10 +52,10 @@
       ],
       "icon": "build/icon.png",
       "category": "Office",
-      "maintainer": "ngthhung <ngthhung.dev@gmail.com>",
+      "maintainer": "ngthhung <ngthhung@users.noreply.github.com>",
       "vendor": "ngthhung",
       "synopsis": "Bartender Lite by ngthhung",
-      "description": "Bartender Lite by ngthhung - thiet ke tem nhan, nap Excel, in va xuat PDF. Lien he: ngthhung.dev@gmail.com - 0968 799 365"
+      "description": "Bartender Lite by ngthhung - thiet ke tem nhan, nap Excel, in va xuat PDF."
     },
     "mac": {
       "target": [
@@ -67,13 +66,13 @@
       "icon": "build/icon.png",
       "category": "public.app-category.productivity",
       "extendInfo": {
-        "CFBundleGetInfoString": "Bartender Lite by ngthhung - ngthhung.dev@gmail.com - 0968 799 365"
+        "CFBundleGetInfoString": "Bartender Lite by ngthhung"
       }
     },
     "deb": {
       "artifactName": "bartender-lite_${version}-build${env.BUILD_NUMBER}_${arch}.${ext}"
     },
-    "copyright": "Copyright © 2026 ngthhung | ngthhung.dev@gmail.com | 0968 799 365"
+    "copyright": "Copyright © 2026 ngthhung"
   },
   "devDependencies": {
     "electron": "31.7.7",
