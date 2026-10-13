@@ -1,0 +1,77 @@
+name: Dọn Release cũ
+
+# Chạy tay: Actions -> "Dọn Release cũ" -> Run workflow.
+# Mỗi lần chạy, chỉ GIỮ Release mới nhất, và xoá:
+#   1. Các Release cũ
+#   2. Các tag cũ (tag của Release cũ và mọi tag không phải của Release mới nhất)
+#   3. Toàn bộ Artifacts
+#   4. Lịch sử các lần chạy workflow trước (trừ lần chạy hiện tại)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+env:
+  GH_TOKEN: ${{ github.token }}
+  REPO: ${{ github.repository }}
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Xác định Release mới nhất
+        id: keep
+        run: |
+          KEEP=$(gh api "repos/$REPO/releases?per_page=100" --paginate \
+            --jq '[.[] | select(.draft==false)] | sort_by(.created_at) | last | .tag_name // empty' | tail -n1)
+          if [ -z "$KEEP" ]; then
+            echo "Không có Release nào -> dừng, không xoá gì."
+            exit 1
+          fi
+          echo "Giữ lại Release: $KEEP"
+          echo "tag=$KEEP" >> "$GITHUB_OUTPUT"
+
+      - name: 1. Xoá Release cũ
+        run: |
+          gh api "repos/$REPO/releases?per_page=100" --paginate \
+            --jq '.[] | "\(.id) \(.tag_name)"' | while read -r id tag; do
+            if [ "$tag" != "${{ steps.keep.outputs.tag }}" ]; then
+              echo "Xoá Release $tag"
+              gh api -X DELETE "repos/$REPO/releases/$id" || true
+            fi
+          done
+
+      - name: 2. Xoá tag cũ
+        run: |
+          gh api "repos/$REPO/git/matching-refs/tags/" --paginate \
+            --jq '.[].ref | sub("^refs/tags/";"")' | while read -r tag; do
+            if [ "$tag" != "${{ steps.keep.outputs.tag }}" ]; then
+              echo "Xoá tag $tag"
+              gh api -X DELETE "repos/$REPO/git/refs/tags/$tag" || true
+            fi
+          done
+
+      - name: 3. Xoá toàn bộ Artifacts
+        run: |
+          gh api "repos/$REPO/actions/artifacts?per_page=100" --paginate \
+            --jq '.artifacts[].id' | while read -r id; do
+            echo "Xoá artifact $id"
+            gh api -X DELETE "repos/$REPO/actions/artifacts/$id" || true
+          done
+
+      - name: 4. Xoá lịch sử các lần chạy trước
+        run: |
+          gh api "repos/$REPO/actions/runs?per_page=100" --paginate \
+            --jq '.workflow_runs[].id' | while read -r id; do
+            if [ "$id" != "${{ github.run_id }}" ]; then
+              echo "Xoá run $id"
+              gh api -X DELETE "repos/$REPO/actions/runs/$id" || true
+            fi
+          done
+
+      - name: Tóm tắt
+        run: |
+          echo "Đã giữ lại Release ${{ steps.keep.outputs.tag }}." >> "$GITHUB_STEP_SUMMARY"

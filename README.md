@@ -62,6 +62,8 @@ npx electron-builder --mac pkg --x64 --arm64            # macOS
 ```
 Kết quả nằm trong `dist/`. Mỗi lần push lên `main` (trừ khi chỉ sửa `.md`/`docs/`), GitHub Actions tự build 3 hệ điều hành và tạo Release mới. Cũng có thể chạy tay ở tab **Actions** → *Build installers* → *Run workflow*.
 
+Dọn dẹp: tab **Actions** → *Dọn Release cũ* → *Run workflow* sẽ chỉ giữ lại Release mới nhất, xoá Release cũ, tag cũ, toàn bộ Artifacts và lịch sử các lần chạy trước.
+
 ## Cấu trúc
 ```
 app/        giao diện (index.html, một file, Tailwind tĩnh)
