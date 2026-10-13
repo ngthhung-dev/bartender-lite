@@ -5,12 +5,14 @@
 
   var APP_VERSION = '1.0.0';
   var AUTHOR = 'ngthhung';
+  var EMAIL = 'ngthhung.dev@gmail.com';
+  var PHONE = '0968 799 365';
   var MOD = /Mac|iPhone|iPad/.test(navigator.platform || '') ? '⌘' : 'Ctrl';
 
   var L = {
     vi: {
       help: 'Trợ giúp', about: 'Thông tin', guide: 'Hướng dẫn sử dụng', keys: 'Phím tắt', close: 'Đóng',
-      version: 'Phiên bản', author: 'Tác giả', free: 'Ứng dụng miễn phí',
+      version: 'Phiên bản', author: 'Tác giả', email: 'Email', phone: 'Điện thoại', free: 'Ứng dụng miễn phí',
       desc: 'Bartender Lite giúp bạn thiết kế và in tem nhãn (mã vạch, mã QR, thông tin sản phẩm…), nạp dữ liệu hàng loạt từ Excel và in trực tiếp hoặc xuất PDF đúng khổ giấy.',
       features: ['Thiết kế tự do: văn bản, trường Excel, mã vạch, mã QR, khung hình, hình ảnh', 'Nạp Excel/CSV và mapping cột để in hàng loạt', 'In trực tiếp ra máy in hoặc xuất PDF đúng kích thước', 'Giao diện 5 ngôn ngữ: Tiếng Việt, English, 简体中文, 한국어, 日本語'],
       guideSections: [
@@ -27,7 +29,7 @@
     },
     en: {
       help: 'Help', about: 'About', guide: 'User guide', keys: 'Keyboard shortcuts', close: 'Close',
-      version: 'Version', author: 'Author', free: 'Free application',
+      version: 'Version', author: 'Author', email: 'Email', phone: 'Phone', free: 'Free application',
       desc: 'Bartender Lite lets you design and print labels (barcodes, QR codes, product info…), import bulk data from Excel, and print directly or export a PDF at the exact paper size.',
       features: ['Free-form design: text, Excel fields, barcodes, QR codes, shapes, images', 'Import Excel/CSV and map columns for bulk printing', 'Print directly to a printer or export a PDF at exact size', '5 UI languages: Tiếng Việt, English, 简体中文, 한국어, 日本語'],
       guideSections: [
@@ -44,7 +46,7 @@
     },
     zh: {
       help: '帮助', about: '关于', guide: '使用指南', keys: '快捷键', close: '关闭',
-      version: '版本', author: '作者', free: '免费应用',
+      version: '版本', author: '作者', email: '邮箱', phone: '电话', free: '免费应用',
       desc: 'Bartender Lite 可帮助您设计和打印标签（条形码、二维码、产品信息等），从 Excel 批量导入数据，并可直接打印或按精确纸张尺寸导出 PDF。',
       features: ['自由设计：文本、Excel 字段、条形码、二维码、形状、图片', '导入 Excel/CSV 并映射列以批量打印', '直接打印或按精确尺寸导出 PDF', '5 种界面语言：Tiếng Việt、English、简体中文、한국어、日本語'],
       guideSections: [
@@ -61,7 +63,7 @@
     },
     ko: {
       help: '도움말', about: '정보', guide: '사용 설명서', keys: '단축키', close: '닫기',
-      version: '버전', author: '제작자', free: '무료 애플리케이션',
+      version: '버전', author: '제작자', email: '이메일', phone: '전화번호', free: '무료 애플리케이션',
       desc: 'Bartender Lite로 라벨(바코드, QR 코드, 제품 정보 등)을 디자인하고 인쇄할 수 있으며, Excel 데이터를 일괄 불러와 바로 인쇄하거나 정확한 용지 크기의 PDF로 내보낼 수 있습니다.',
       features: ['자유 디자인: 텍스트, Excel 필드, 바코드, QR 코드, 도형, 이미지', 'Excel/CSV 불러오기 및 열 매핑으로 일괄 인쇄', '프린터로 바로 인쇄하거나 정확한 크기의 PDF 내보내기', '5개 UI 언어: Tiếng Việt, English, 简体中文, 한국어, 日本語'],
       guideSections: [
@@ -78,7 +80,7 @@
     },
     ja: {
       help: 'ヘルプ', about: '情報', guide: '使い方', keys: 'ショートカットキー', close: '閉じる',
-      version: 'バージョン', author: '作者', free: '無料アプリケーション',
+      version: 'バージョン', author: '作者', email: 'メール', phone: '電話番号', free: '無料アプリケーション',
       desc: 'Bartender Lite は、ラベル（バーコード、QR コード、商品情報など）のデザインと印刷、Excel からの一括データ取り込み、直接印刷や正確な用紙サイズでの PDF 出力ができるアプリです。',
       features: ['自由なデザイン：テキスト、Excel フィールド、バーコード、QR コード、図形、画像', 'Excel/CSV を読み込み、列をマッピングして一括印刷', 'プリンターへ直接印刷、または正確なサイズで PDF 出力', '5 つの表示言語：Tiếng Việt、English、简体中文、한국어、日本語'],
       guideSections: [
@@ -144,6 +146,8 @@
       h += '<h3>Bartender Lite</h3><p>' + esc(s.desc) + '</p><div class="meta">' +
         '<b>' + esc(s.version) + '</b><span>' + APP_VERSION + '</span>' +
         '<b>' + esc(s.author) + '</b><span>' + AUTHOR + '</span>' +
+        '<b>' + esc(s.email) + '</b><span>' + EMAIL + '</span>' +
+        '<b>' + esc(s.phone) + '</b><span>' + PHONE + '</span>' +
         '<b>&nbsp;</b><span>' + esc(s.free) + '</span></div><ul>';
       for (i = 0; i < s.features.length; i++) h += '<li>' + esc(s.features[i]) + '</li>';
       h += '</ul>';
