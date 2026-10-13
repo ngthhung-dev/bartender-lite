@@ -2380,6 +2380,7 @@ const translations = {
     }
 
     function recordHistory() {
+      flushPendingArrowEdit();
       const snap = getEditorSnapshot();
       if (!undoStack.length || !snapshotsEqual(undoStack[undoStack.length - 1], snap)) {
         undoStack.push(snap);
@@ -2389,7 +2390,17 @@ const translations = {
       updateHistoryButtons();
     }
 
+    // Bien dem cho viec gop phim mui ten (xem initKeyboardListeners).
+    let arrowCommitTimer = null;
+    function flushPendingArrowEdit() {
+      if (arrowCommitTimer === null) return;
+      clearTimeout(arrowCommitTimer);
+      arrowCommitTimer = null;
+      commitHistoryEdit();
+    }
+
     function beginHistoryEdit() {
+      flushPendingArrowEdit(); // chot cac lan bam mui ten dang cho truoc khi bat dau thao tac moi
       if (!historyEditSnapshot) historyEditSnapshot = getEditorSnapshot();
     }
 
@@ -2433,6 +2444,7 @@ const translations = {
     }
 
     function undo() {
+      flushPendingArrowEdit();
       if (!undoStack.length) return;
       const current = getEditorSnapshot();
       const previous = undoStack.pop();
@@ -2441,6 +2453,7 @@ const translations = {
     }
 
     function redo() {
+      flushPendingArrowEdit();
       if (!redoStack.length) return;
       const current = getEditorSnapshot();
       const next = redoStack.pop();
@@ -2456,6 +2469,8 @@ const translations = {
     }
 
     function resetHistory() {
+      clearTimeout(arrowCommitTimer);
+      arrowCommitTimer = null;
       undoStack = [];
       redoStack = [];
       historyEditSnapshot = null;
@@ -2520,16 +2535,20 @@ const translations = {
           const step = e.shiftKey ? 10 : 1;
           const maxLeft = Math.max(0, canvas.clientWidth - el.width);
           const maxTop = Math.max(0, canvas.clientHeight - el.height);
-          beginHistoryEdit();
+          // Gop nhieu lan bam phim mui ten (ke ca giu phim) thanh MOT buoc hoan tac:
+          // chup trang thai truoc lan bam dau tien, chot sau khi ngung bam 400ms.
+          if (!historyEditSnapshot) historyEditSnapshot = getEditorSnapshot();
           switch (e.key) {
             case 'ArrowLeft': el.left = Math.max(0, el.left - step); break;
             case 'ArrowRight': el.left = Math.min(maxLeft, el.left + step); break;
             case 'ArrowUp': el.top = Math.max(0, el.top - step); break;
             case 'ArrowDown': el.top = Math.min(maxTop, el.top + step); break;
           }
-          renderElementDOM(el, canvas);
-          updatePropertiesPanel(el);
-          commitHistoryEdit();
+          const domEl = canvas.querySelector(`[data-id="${el.id}"]`);
+          if (domEl) { domEl.style.left = el.left + 'px'; domEl.style.top = el.top + 'px'; }
+          updateGeometryInputs(el);
+          clearTimeout(arrowCommitTimer);
+          arrowCommitTimer = setTimeout(flushPendingArrowEdit, 400);
         }
       });
     }
@@ -2672,9 +2691,7 @@ const translations = {
             if (fileResult && fileResult.success) {
               try {
                 const bytes = new Uint8Array(fileResult.data);
-                const workbook = XLSX.read(bytes, { type: 'array' });
-                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-                const parsedData = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+                const parsedData = parseExcelBytes(bytes, templateData.excelFilePath);
                 if (parsedData.length > 0) {
                   excelData = parsedData;
                   excelColumns = Object.keys(parsedData[0]);
@@ -3160,6 +3177,25 @@ const translations = {
       const alignClass = el.textAlign === 'center' ? 'text-center' : (el.textAlign === 'right' ? 'text-right' : 'text-left');
       const textMargin = el.textMargin !== undefined ? parseInt(el.textMargin) : 0;
 
+      // Chu ky noi dung: neu cac thuoc tinh anh huong HINH ANH khong doi (vd chi
+      // doi vi tri/goc xoay/chon phan tu) thi KHONG ve lai ma vach/QR/chu/anh.
+      let sig;
+      switch (el.type) {
+        case 'text': case 'field':
+          sig = [el.type, el.width, el.height, el.fontSize, el.fontWeight, el.textAlign, el.maxLines, displayContent]; break;
+        case 'barcode':
+          sig = [el.type, el.width, el.height, el.barcodeFormat, el.showBarcodeText, el.fontSize, el.fontWeight, el.textAlign, textMargin, displayContent]; break;
+        case 'qrcode':
+          sig = [el.type, el.width, el.height, el.fontSize, el.fontWeight, el.textAlign, el.maxLines, textMargin, el.showQrText, displayContent]; break;
+        case 'image':
+          sig = [el.type, el.width, el.height, el.name]; break;
+        default:
+          sig = [el.type];
+      }
+      sig = sig.join('\u0001') + '\u0001' + currentLang;
+      if (el.type === 'image' && contentDiv._src !== el.src) { contentDiv._src = el.src; contentDiv._sig = null; }
+      if (contentDiv._sig !== sig) {
+        contentDiv._sig = sig;
       if (el.type === 'text' || el.type === 'field') {
         contentDiv.className = 'element-content w-full h-full relative overflow-hidden';
         paintElementCanvas(contentDiv, el, drawTextToCtx, displayContent, 2);
@@ -3248,6 +3284,7 @@ const translations = {
       else if (el.type === 'line') {
         contentDiv.className = 'element-content w-full h-full bg-slate-800';
         contentDiv.innerHTML = '';
+      }
       }
 
       if (targetCanvas === canvas && el.id === selectedElementId) {
@@ -3764,6 +3801,30 @@ const translations = {
       }
     }
 
+    // Doc bang tinh Excel/CSV thanh mang dong du lieu (dung chung khi nap file
+    // va khi mo mau). Cac o NGAY/GIO duoc doi thanh chuoi dd/mm/yyyy (kem gio
+    // neu co) thay vi con so serial. File CSV doc nguyen van ban (giu so 0 dau,
+    // khong tu doan ngay thang kieu My).
+    function parseExcelBytes(bytes, fileName) {
+      const isCsv = /\.csv$/i.test(fileName || '');
+      const workbook = XLSX.read(bytes, { type: 'array', cellNF: true, raw: isCsv });
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      if (!worksheet) return [];
+      if (!isCsv) {
+        for (const addr in worksheet) {
+          if (addr[0] === '!') continue;
+          const c = worksheet[addr];
+          if (!c || c.t !== 'n' || !c.z || typeof c.v !== 'number') continue;
+          if (!XLSX.SSF.is_date(c.z)) continue;
+          const fmt = c.v < 1 ? 'hh:mm:ss' : (Number.isInteger(c.v) ? 'dd/mm/yyyy' : 'dd/mm/yyyy hh:mm');
+          c.v = XLSX.SSF.format(fmt, c.v);
+          c.t = 's';
+          c.w = c.v;
+        }
+      }
+      return XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+    }
+
     function setupExcelUpload() {
       const fileInput = document.getElementById('excel-file-input');
       fileInput.addEventListener('change', (e) => {
@@ -3774,10 +3835,7 @@ const translations = {
         reader.onload = (evt) => {
           try {
             const data = new Uint8Array(evt.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-
-            excelData = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+            excelData = parseExcelBytes(data, file.name);
             if (excelData.length > 0) {
               excelColumns = Object.keys(excelData[0]);
               lastExcelFileName = file.name;
