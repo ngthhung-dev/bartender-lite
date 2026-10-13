@@ -2242,6 +2242,7 @@ const translations = {
         el.title = t(el.getAttribute('data-i18n-title'));
       });
       document.documentElement.lang = currentLang;
+      if (window.refreshHelp) window.refreshHelp();
 
       // Cap nhat lai cac phan sinh dong (neu dang co phan tu duoc chon)
       if (typeof selectedElementId !== 'undefined' && selectedElementId) {
@@ -2489,6 +2490,7 @@ const translations = {
 
     function initKeyboardListeners() {
       document.addEventListener('keydown', (e) => {
+        if (window.isHelpOpen && window.isHelpOpen()) return;
         const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
         const isFormField = activeTag === 'input' || activeTag === 'select' || activeTag === 'textarea';
 
@@ -4482,5 +4484,6 @@ const translations = {
       }
     });
   </script>
+  <script src="help.js"></script>
 </body>
 </html>
