@@ -99,7 +99,7 @@
     '#help-wrap{position:relative;display:inline-block;margin-left:4px}' +
     '#help-btn{width:28px;height:28px;border-radius:6px;background:#1e293b;border:1px solid #334155;color:#fff;cursor:pointer;font-size:13px;display:inline-flex;align-items:center;justify-content:center}' +
     '#help-btn:hover{background:#334155}' +
-    '#help-menu{position:absolute;left:0;top:34px;min-width:190px;background:#fff;color:#0f172a;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.35);padding:4px;z-index:60;display:none}' +
+    '#help-menu{position:fixed;left:0;top:0;min-width:190px;background:#fff;color:#0f172a;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.35);padding:4px;z-index:200;display:none}' +
     '#help-menu.open{display:block}' +
     '#help-menu button{display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:8px 10px;border:0;background:none;font-size:13px;color:#0f172a;border-radius:6px;cursor:pointer}' +
     '#help-menu button:hover{background:#e2e8f0}' +
@@ -221,8 +221,15 @@
 
     el('help-btn').addEventListener('click', function (e) {
       e.stopPropagation();
-      el('help-menu').classList.toggle('open');
+      var m = el('help-menu');
+      if (m.classList.contains('open')) { closeMenu(); return; }
+      var r = el('help-btn').getBoundingClientRect();
+      m.classList.add('open');
+      var w = m.offsetWidth;
+      m.style.left = Math.max(8, Math.min(r.left, window.innerWidth - w - 8)) + 'px';
+      m.style.top = (r.bottom + 6) + 'px';
     });
+    window.addEventListener('resize', closeMenu);
     el('help-menu').addEventListener('click', function (e) {
       var b = e.target.closest('[data-help]');
       if (b) openDialog(b.getAttribute('data-help'));
