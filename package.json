@@ -46,7 +46,6 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "language": "1066",
-      "multiLanguageInstaller": false,
       "installerLanguages": [
         "vi_VN"
       ]
