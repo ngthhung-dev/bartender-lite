@@ -85,5 +85,8 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/ngthhung-dev/bartender-lite.git"
+  },
+  "scripts": {
+    "postinstall": "node scripts/patch-nsis-vi.js"
   }
 }
