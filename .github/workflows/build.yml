@@ -7,7 +7,7 @@ name: Build installers
 #              Bartender-Lite-<version>-build<N>-macOS-AppleSilicon.pkg
 #              Bartender-Lite-<version>-build<N>-macOS-Intel.pkg
 #              bartender-lite_<version>-build<N>_amd64.deb
-# <N> = github.run_number trừ mốc BASE trong job setup (reset về build 1 sau run 5).
+# <N> = github.run_number trừ mốc BASE trong job setup (reset về build 1 sau run 10).
 
 on:
   workflow_dispatch:
@@ -25,10 +25,10 @@ jobs:
       build: ${{ steps.n.outputs.build }}
     steps:
       - id: n
-        # Đặt lại số build về 1: run_number trừ đi mốc BASE (đã dùng tới run 5).
+        # Đặt lại số build về 1: run_number trừ đi mốc BASE (đã dùng tới run 10).
         # Muốn reset lần nữa: tăng BASE = run_number của lần chạy cuối.
         run: |
-          BASE=5
+          BASE=10
           echo "build=$(( ${{ github.run_number }} - BASE ))" >> "$GITHUB_OUTPUT"
   build:
     needs: setup

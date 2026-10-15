@@ -44,7 +44,12 @@
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "language": "1066",
+      "multiLanguageInstaller": false,
+      "installerLanguages": [
+        "vi_VN"
+      ]
     },
     "linux": {
       "target": [
