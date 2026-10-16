@@ -39,7 +39,7 @@
         }
       ],
       "icon": "build/icon.png",
-      "artifactName": "Bartender-Lite-${version}-build${env.BUILD_NUMBER}-Setup.${ext}",
+      "artifactName": "Bartender-Lite-${version}-Setup.${ext}",
       "legalTrademarks": "ngthhung"
     },
     "nsis": {
@@ -74,7 +74,7 @@
       }
     },
     "deb": {
-      "artifactName": "bartender-lite_${version}-build${env.BUILD_NUMBER}_${arch}.${ext}"
+      "artifactName": "bartender-lite_${version}_${arch}.${ext}"
     },
     "copyright": "Copyright © 2026 ngthhung"
   },

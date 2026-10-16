@@ -19,18 +19,18 @@
 - Giao diện 5 ngôn ngữ: Tiếng Việt, English, 简体中文, 한국어, 日本語.
 
 ## Tải về
-Tải bản cài mới nhất ở trang [**Releases**](../../releases/latest). Mỗi lần build tự động có tag `v<phiên bản>-build<số>` (ví dụ `v1.0.0-build42`):
+Tải bản cài mới nhất ở trang [**Releases**](../../releases/latest). Mỗi lần build tự động có tag `v<phiên bản>` (ví dụ `v1.0.1`), phiên bản tự tăng 1.0.1 → … → 1.0.99 → 1.1.0 → … → 1.99.99 → 2.0.0:
 
 | Hệ điều hành | File |
 |---|---|
-| Windows 64-bit | `Bartender-Lite-1.0.0-build<N>-Setup.exe` |
-| macOS chip Apple (M1 trở lên) | `Bartender-Lite-1.0.0-build<N>-macOS-AppleSilicon.pkg` |
-| macOS chip Intel | `Bartender-Lite-1.0.0-build<N>-macOS-Intel.pkg` |
-| Linux Mint / Ubuntu / Debian 64-bit | `bartender-lite_1.0.0-build<N>_amd64.deb` |
+| Windows 64-bit | `Bartender-Lite-1.0.1-Setup.exe` |
+| macOS chip Apple (M1 trở lên) | `Bartender-Lite-1.0.1-macOS-AppleSilicon.pkg` |
+| macOS chip Intel | `Bartender-Lite-1.0.1-macOS-Intel.pkg` |
+| Linux Mint / Ubuntu / Debian 64-bit | `bartender-lite_1.0.1_amd64.deb` |
 
 ### Cài đặt
 - **Windows:** chạy file `.exe`. Nếu SmartScreen cảnh báo (app chưa ký số), chọn *More info* → *Run anyway*.
-- **Linux:** `sudo apt install ./bartender-lite_1.0.0-build<N>_amd64.deb`.
+- **Linux:** `sudo apt install ./bartender-lite_1.0.1_amd64.deb`.
 - **macOS:** mở file `.pkg`; app chưa ký số nên lần đầu bấm chuột phải vào `.pkg` → *Open* (hoặc System Settings → Privacy & Security → Open Anyway).
 
 ## Hướng dẫn sử dụng

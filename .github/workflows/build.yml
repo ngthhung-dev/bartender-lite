@@ -1,16 +1,22 @@
 name: Build installers
 
-# Quy ước đặt tên (giống PDF Editor Lite):
-#   tag      : v<version>-build<N>          (vd v1.0.0-build42)
-#   release  : Bartender Lite <version> (build <N>)
-#   file cài : Bartender-Lite-<version>-build<N>-Setup.exe
-#              Bartender-Lite-<version>-build<N>-macOS-AppleSilicon.pkg
-#              Bartender-Lite-<version>-build<N>-macOS-Intel.pkg
-#              bartender-lite_<version>-build<N>_amd64.deb
-# <N> = github.run_number trừ mốc BASE trong job setup (reset về build 1 sau run 13).
+# Quy ước phiên bản (giống các app khác của ngthhung): mỗi lần chạy tự tăng từ bản phát hành gần nhất
+#   1.0.1 → 1.0.2 → … → 1.0.99 → 1.1.0 → … → 1.99.99 → 2.0.0
+#   tag      : v<version>                 (vd v1.0.1)
+#   release  : Bartender Lite <version>
+#   file cài : Bartender-Lite-<version>-Setup.exe
+#              Bartender-Lite-<version>-macOS-AppleSilicon.pkg
+#              Bartender-Lite-<version>-macOS-Intel.pkg
+#              bartender-lite_<version>_amd64.deb
+# Chạy tay có thể tự nhập phiên bản.
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Tự nhập phiên bản (vd 1.2.3). Để trống = tự tăng từ bản phát hành gần nhất'
+        required: false
+        default: ''
   push:
     branches: [main]
     paths-ignore: ["**.md", "docs/**"]
@@ -22,18 +28,32 @@ jobs:
   setup:
     runs-on: ubuntu-latest
     outputs:
-      build: ${{ steps.n.outputs.build }}
+      version: ${{ steps.v.outputs.version }}
     steps:
-      - id: n
-        # Đặt lại số build về 1: run_number trừ đi mốc BASE (đã dùng tới run 13).
-        # Muốn reset lần nữa: tăng BASE = run_number của lần chạy cuối.
+      - uses: actions/checkout@v4
+      - id: v
+        name: Phiên bản kế tiếp
+        shell: bash
         run: |
-          BASE=13
-          echo "build=$(( ${{ github.run_number }} - BASE ))" >> "$GITHUB_OUTPUT"
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            V="${{ github.event.inputs.version }}"; V="${V#v}"
+          else
+            # bản gần nhất (bỏ đuôi -buildN của các tag cũ); chưa có thì coi như 1.0.0
+            LAST=$(git ls-remote --tags --refs origin 'v*' | sed 's#.*refs/tags/v##; s#-build.*##' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)
+            LAST=${LAST:-1.0.0}
+            IFS=. read -r MA MI PA <<< "$LAST"
+            PA=$((PA + 1))
+            if [ "$PA" -gt 99 ]; then PA=0; MI=$((MI + 1)); fi
+            if [ "$MI" -gt 99 ]; then MI=0; MA=$((MA + 1)); fi
+            V="$MA.$MI.$PA"
+            echo "Bản gần nhất: $LAST"
+          fi
+          echo "Phiên bản: $V"
+          echo "version=$V" >> "$GITHUB_OUTPUT"
   build:
     needs: setup
     env:
-      BUILD_NUMBER: ${{ needs.setup.outputs.build }}
+      APP_VERSION: ${{ needs.setup.outputs.version }}
     strategy:
       fail-fast: false
       matrix:
@@ -54,6 +74,9 @@ jobs:
         with:
           node-version: 20
       - run: npm install --no-audit --no-fund
+      - name: Gắn phiên bản vào ứng dụng
+        shell: bash
+        run: npm version "$APP_VERSION" --no-git-tag-version --allow-same-version
       - run: npx electron-builder ${{ matrix.args }} --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
@@ -61,13 +84,13 @@ jobs:
         if: matrix.name == 'macos'
         shell: bash
         run: |
-          V=$(node -p "require('./package.json').version")
+          V="$APP_VERSION"
           mkdir -p out
           for pair in "mac:Intel" "mac-arm64:AppleSilicon"; do
             dir="${pair%%:*}"; label="${pair##*:}"
             pkgbuild --component "dist/$dir/Bartender Lite.app" --install-location /Applications \
               --identifier com.ngthhung.bartenderlite --version "$V" \
-              "dist/Bartender-Lite-$V-build$BUILD_NUMBER-macOS-$label.pkg"
+              "dist/Bartender-Lite-$V-macOS-$label.pkg"
           done
           ls -la dist/*.pkg
       - uses: actions/upload-artifact@v4
@@ -87,13 +110,10 @@ jobs:
         with:
           path: out
           merge-multiple: true
-      - name: Lấy version
-        id: v
-        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.v.outputs.version }}-build${{ needs.setup.outputs.build }}
-          name: Bartender Lite ${{ steps.v.outputs.version }} (build ${{ needs.setup.outputs.build }})
+          tag_name: v${{ needs.setup.outputs.version }}
+          name: Bartender Lite ${{ needs.setup.outputs.version }}
           target_commitish: ${{ github.sha }}
           make_latest: true
           files: out/*
